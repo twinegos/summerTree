@@ -6,68 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
-  public: {
-    Tables: {
-      categories: {
-        Row: CategoryRow
-        Insert: CategoryInsert
-        Update: CategoryUpdate
-      }
-      plants: {
-        Row: PlantRow
-        Insert: PlantInsert
-        Update: PlantUpdate
-      }
-      orders: {
-        Row: OrderRow
-        Insert: OrderInsert
-        Update: OrderUpdate
-      }
-      order_items: {
-        Row: OrderItemRow
-        Insert: OrderItemInsert
-        Update: OrderItemUpdate
-      }
-      cart_items: {
-        Row: CartItemRow
-        Insert: CartItemInsert
-        Update: CartItemUpdate
-      }
-    }
-  }
-}
-
-// ============================================================
-// categories
-// ============================================================
-
-export interface CategoryRow {
-  id: string
-  name: string
-  description: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface CategoryInsert {
-  id?: string
-  name: string
-  description?: string | null
-  created_at?: string
-  updated_at?: string
-}
-
-export interface CategoryUpdate {
-  name?: string
-  description?: string | null
-  updated_at?: string
-}
-
-// ============================================================
-// plants
-// ============================================================
-
 export type OrderStatus =
   | 'pending'
   | 'paid'
@@ -77,139 +15,191 @@ export type OrderStatus =
   | 'cancelled'
   | 'refunded'
 
-export interface PlantRow {
-  id: string
-  category_id: string
-  name: string
-  short_description: string | null
-  description: string | null
-  care_guide: string | null
-  caution: string | null
-  price: number
-  stock: number
-  image_urls: string[]
-  is_deleted: boolean
-  created_at: string
-  updated_at: string
+export type Database = {
+  public: {
+    Tables: {
+      categories: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          description?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plants: {
+        Row: {
+          id: string
+          category_id: string
+          name: string
+          short_description: string | null
+          description: string | null
+          care_guide: string | null
+          caution: string | null
+          price: number
+          stock: number
+          image_urls: string[]
+          is_deleted: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          category_id: string
+          name: string
+          short_description?: string | null
+          description?: string | null
+          care_guide?: string | null
+          caution?: string | null
+          price: number
+          stock?: number
+          image_urls?: string[]
+          is_deleted?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          name?: string
+          short_description?: string | null
+          description?: string | null
+          care_guide?: string | null
+          caution?: string | null
+          price?: number
+          stock?: number
+          image_urls?: string[]
+          is_deleted?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          id: string
+          status: OrderStatus
+          total_amount: number
+          buyer_name: string | null
+          buyer_phone: string | null
+          buyer_email: string | null
+          shipping_address: string | null
+          portone_payment_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          status?: OrderStatus
+          total_amount: number
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          buyer_email?: string | null
+          shipping_address?: string | null
+          portone_payment_id?: string | null
+        }
+        Update: {
+          status?: OrderStatus
+          total_amount?: number
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          buyer_email?: string | null
+          shipping_address?: string | null
+          portone_payment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          plant_id: string | null
+          plant_name: string
+          unit_price: number
+          quantity: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          plant_id?: string | null
+          plant_name: string
+          unit_price: number
+          quantity: number
+        }
+        Update: {
+          quantity?: number
+        }
+        Relationships: []
+      }
+      cart_items: {
+        Row: {
+          id: string
+          session_id: string
+          plant_id: string
+          quantity: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          plant_id: string
+          quantity?: number
+        }
+        Update: {
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-export interface PlantInsert {
-  id?: string
-  category_id: string
-  name: string
-  short_description?: string | null
-  description?: string | null
-  care_guide?: string | null
-  caution?: string | null
-  price: number
-  stock?: number
-  image_urls?: string[]
-  is_deleted?: boolean
-  created_at?: string
-  updated_at?: string
-}
+// 편의 타입 alias (composables에서 사용)
+type Tables = Database['public']['Tables']
 
-export interface PlantUpdate {
-  category_id?: string
-  name?: string
-  short_description?: string | null
-  description?: string | null
-  care_guide?: string | null
-  caution?: string | null
-  price?: number
-  stock?: number
-  image_urls?: string[]
-  is_deleted?: boolean
-  updated_at?: string
-}
+export type CategoryRow = Tables['categories']['Row']
+export type CategoryInsert = Tables['categories']['Insert']
+export type CategoryUpdate = Tables['categories']['Update']
 
-// ============================================================
-// orders
-// ============================================================
+export type PlantRow = Tables['plants']['Row']
+export type PlantInsert = Tables['plants']['Insert']
+export type PlantUpdate = Tables['plants']['Update']
 
-export interface OrderRow {
-  id: string
-  status: OrderStatus
-  total_amount: number
-  buyer_name: string | null
-  buyer_phone: string | null
-  buyer_email: string | null
-  shipping_address: string | null
-  portone_payment_id: string | null
-  created_at: string
-  updated_at: string
-}
+export type OrderRow = Tables['orders']['Row']
+export type OrderInsert = Tables['orders']['Insert']
+export type OrderUpdate = Tables['orders']['Update']
 
-export interface OrderInsert {
-  id?: string
-  status?: OrderStatus
-  total_amount: number
-  buyer_name?: string | null
-  buyer_phone?: string | null
-  buyer_email?: string | null
-  shipping_address?: string | null
-  portone_payment_id?: string | null
-}
+export type OrderItemRow = Tables['order_items']['Row']
+export type OrderItemInsert = Tables['order_items']['Insert']
+export type OrderItemUpdate = Tables['order_items']['Update']
 
-export interface OrderUpdate {
-  status?: OrderStatus
-  total_amount?: number
-  buyer_name?: string | null
-  buyer_phone?: string | null
-  buyer_email?: string | null
-  shipping_address?: string | null
-  portone_payment_id?: string | null
-  updated_at?: string
-}
-
-// ============================================================
-// order_items
-// ============================================================
-
-export interface OrderItemRow {
-  id: string
-  order_id: string
-  plant_id: string | null
-  plant_name: string
-  unit_price: number
-  quantity: number
-  created_at: string
-}
-
-export interface OrderItemInsert {
-  id?: string
-  order_id: string
-  plant_id?: string | null
-  plant_name: string
-  unit_price: number
-  quantity: number
-}
-
-export interface OrderItemUpdate {
-  quantity?: number
-}
-
-// ============================================================
-// cart_items
-// ============================================================
-
-export interface CartItemRow {
-  id: string
-  session_id: string
-  plant_id: string
-  quantity: number
-  created_at: string
-  updated_at: string
-}
-
-export interface CartItemInsert {
-  id?: string
-  session_id: string
-  plant_id: string
-  quantity?: number
-}
-
-export interface CartItemUpdate {
-  quantity?: number
-  updated_at?: string
-}
+export type CartItemRow = Tables['cart_items']['Row']
+export type CartItemInsert = Tables['cart_items']['Insert']
+export type CartItemUpdate = Tables['cart_items']['Update']
