@@ -11,8 +11,10 @@ const { showSuccess, showError } = useToast()
 
 const showCategoryModal = ref(false)
 const showDeleteModal = ref(false)
+const showQRModal = ref(false)
 const deleteTargetId = ref('')
 const deleteTargetName = ref('')
+const qrTargetPlant = ref<PlantRow | null>(null)
 
 const selectedCategoryId = ref<string | null>(null)
 const searchQuery = ref('')
@@ -53,6 +55,11 @@ function onSearchInput() {
     currentPage.value = 1
     load()
   }, 300)
+}
+
+function openQRModal(plant: PlantRow) {
+  qrTargetPlant.value = plant
+  showQRModal.value = true
 }
 
 function openDeleteModal(plant: PlantRow) {
@@ -179,6 +186,7 @@ onMounted(async () => {
           :category-name="categoryMap[plant.category_id] ?? ''"
           @edit="navigateTo(`/admin/plants/${$event}/edit`)"
           @delete="openDeleteModal(plant)"
+          @qr="openQRModal(plant)"
         />
 
         <!-- 페이지네이션 -->
@@ -204,6 +212,7 @@ onMounted(async () => {
 
     <!-- 모달 -->
     <AdminCategoryModal v-model="showCategoryModal" />
+    <AdminQRCodeModal v-model="showQRModal" :plant="qrTargetPlant" />
     <AdminDeleteConfirmModal
       v-model="showDeleteModal"
       :plant-name="deleteTargetName"

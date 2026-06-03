@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_ANON_KEY,
+      siteUrl: process.env.SITE_URL || 'https://summer-tree.vercel.app',
     }
   }
 })

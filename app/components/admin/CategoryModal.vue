@@ -52,6 +52,7 @@ async function handleCreate() {
     showSuccess('카테고리가 추가되었습니다')
     newName.value = ''
     newDescription.value = ''
+    await fetchCategories()
   }
 }
 
@@ -68,6 +69,7 @@ async function handleUpdate(id: string) {
   } else {
     showSuccess('카테고리가 수정되었습니다')
     editingId.value = null
+    await fetchCategories()
   }
 }
 
@@ -77,6 +79,7 @@ async function handleDelete(cat: CategoryRow) {
     showError(error)
   } else {
     showSuccess('카테고리가 삭제되었습니다')
+    await fetchCategories()
   }
 }
 

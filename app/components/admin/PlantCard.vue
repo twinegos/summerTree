@@ -9,6 +9,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   edit: [id: string]
   delete: [id: string]
+  qr: [id: string]
 }>()
 
 const formattedPrice = computed(() =>
@@ -54,6 +55,12 @@ const thumbnailUrl = computed(() =>
           <p class="text-xs text-gray-400 mt-0.5">재고 {{ plant.stock }}개</p>
         </div>
         <div class="flex gap-2">
+          <button
+            @click="emit('qr', plant.id)"
+            class="text-xs px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+          >
+            QR
+          </button>
           <button
             @click="emit('edit', plant.id)"
             class="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
