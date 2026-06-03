@@ -1,5 +1,9 @@
 import type { PlantRow, PlantInsert, PlantUpdate } from '~/types/database.types'
 
+export interface PlantWithCategory extends PlantRow {
+  categories: { name: string } | null
+}
+
 interface PlantListParams {
   categoryId?: string
   search?: string
@@ -129,10 +133,27 @@ export function usePlants() {
     return { error: null }
   }
 
+  async function fetchPlantById(
+    id: string
+  ): Promise<{ data: PlantWithCategory | null; error: string | null }> {
+    const { data, error } = await supabase
+      .from('plants')
+      .select('*, categories(name)')
+      .eq('id', id)
+      .eq('is_deleted', false)
+      .maybeSingle()
+
+    if (error) {
+      return { data: null, error: error.message }
+    }
+    return { data: data as PlantWithCategory | null, error: null }
+  }
+
   return {
     plants,
     isLoading,
     fetchPlants,
+    fetchPlantById,
     createPlant,
     updatePlant,
     deletePlant,
