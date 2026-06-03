@@ -5,7 +5,8 @@ definePageMeta({ layout: false })
 
 const route = useRoute()
 const { fetchPlantById } = usePlants()
-const { showSuccess } = useToast()
+const { addToCart } = useCart()
+const { showSuccess, showError } = useToast()
 
 const plant = ref<PlantWithCategory | null>(null)
 const isLoading = ref(true)
@@ -37,9 +38,18 @@ function onGalleryScroll() {
   activeImageIndex.value = Math.min(index, plant.value.image_urls.length - 1)
 }
 
-function handleAddToCart() {
-  // Phase 4에서 실제 장바구니 로직 연결
-  showSuccess('장바구니에 담겼습니다')
+const isAddingToCart = ref(false)
+
+async function handleAddToCart() {
+  if (!plant.value || isAddingToCart.value) return
+  isAddingToCart.value = true
+  const { error } = await addToCart(plant.value.id)
+  isAddingToCart.value = false
+  if (error) {
+    showError('장바구니 담기에 실패했습니다')
+  } else {
+    showSuccess('장바구니에 담겼습니다')
+  }
 }
 
 onMounted(load)
@@ -188,13 +198,13 @@ onMounted(load)
       <div class="max-w-[480px] mx-auto">
         <button
           @click="handleAddToCart"
-          :disabled="isOutOfStock"
+          :disabled="isOutOfStock || isAddingToCart"
           class="w-full py-3.5 text-base font-bold rounded-2xl transition-colors"
           :class="isOutOfStock
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
             : 'bg-green-600 hover:bg-green-700 text-white active:scale-[0.98]'"
         >
-          {{ isOutOfStock ? '품절' : '🛒 장바구니 담기' }}
+          {{ isOutOfStock ? '품절' : isAddingToCart ? '담는 중...' : '🛒 장바구니 담기' }}
         </button>
       </div>
     </div>
