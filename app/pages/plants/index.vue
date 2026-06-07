@@ -52,11 +52,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen relative overflow-hidden" style="background: var(--bg);">
+  <div class="min-h-screen" style="background: var(--bg); position: relative;">
     <!-- 배경 일러스트 -->
-    <div class="absolute bottom-0 right-0 pointer-events-none select-none" style="opacity: 0.07; color: var(--dark); width: 60%;">
-      <IllustrationList class="w-full" />
+    <div class="pointer-events-none select-none" style="position: absolute; bottom: 0; right: 0; z-index: 0; opacity: 0.07; color: var(--dark); width: 60%;">
+      <IllustrationList style="display: block; width: 100%;" />
     </div>
+    <!-- 콘텐츠 레이어 -->
+    <div style="position: relative; z-index: 1;">
     <CommonToast />
 
     <!-- 헤더 -->
@@ -160,5 +162,6 @@ onMounted(async () => {
 
       <div class="pb-12" />
     </div>
+    </div><!-- /콘텐츠 레이어 -->
   </div>
 </template>
