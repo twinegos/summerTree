@@ -25,7 +25,7 @@ onMounted(fetchCart)
 <template>
   <div class="min-h-screen" style="background: var(--bg); position: relative;">
     <!-- 배경 일러스트 -->
-    <div class="pointer-events-none select-none" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 0; opacity: 0.07; color: var(--dark);">
+    <div class="pointer-events-none select-none" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 0; opacity: 0.13; color: var(--dark);">
       <IllustrationCart style="display: block; width: 100%;" />
     </div>
     <!-- 콘텐츠 레이어 -->

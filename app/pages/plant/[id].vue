@@ -74,7 +74,7 @@ onMounted(load)
     <!-- 상품 상세 -->
     <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32" style="position: relative;">
       <!-- 배경 일러스트 -->
-      <div class="pointer-events-none select-none" style="position: absolute; top: 0; right: 0; z-index: 0; opacity: 0.06; color: var(--dark); width: 55%;">
+      <div class="pointer-events-none select-none" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 0; opacity: 0.13; color: var(--dark);">
         <IllustrationDetail style="display: block; width: 100%;" />
       </div>
       <!-- 콘텐츠 레이어 -->
