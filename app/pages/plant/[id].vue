@@ -81,13 +81,21 @@ onMounted(load)
     <div v-else-if="plant" class="max-w-[480px] mx-auto pb-28">
 
       <!-- 헤더 -->
-      <div class="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button @click="$router.back()" class="p-1.5 -ml-1.5 text-gray-500 hover:text-gray-800 transition-colors">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      <div class="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button @click="$router.back()" class="p-1.5 -ml-1.5 text-gray-500 hover:text-gray-800 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <NuxtLink to="/plants" class="text-sm font-semibold text-green-700">summerTree</NuxtLink>
+        </div>
+        <NuxtLink to="/cart" class="relative p-1.5 -mr-1.5">
+          <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-        </button>
-        <span class="text-sm font-semibold text-green-700">summerTree</span>
+        </NuxtLink>
       </div>
 
       <!-- 이미지 갤러리 -->
