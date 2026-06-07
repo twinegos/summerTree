@@ -52,53 +52,46 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen" style="background: var(--bg);">
     <CommonToast />
 
     <!-- 헤더 -->
-    <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
-      <div class="max-w-[480px] mx-auto px-4 py-3 flex items-center justify-between">
-        <NuxtLink to="/" class="text-lg font-bold text-green-700">summerTree</NuxtLink>
-        <NuxtLink to="/cart" class="relative p-2 -mr-1">
-          <svg class="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <span
-            v-if="cartCount > 0"
-            class="absolute top-1 right-1 w-4 h-4 bg-green-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
-          >
-            {{ cartCount > 9 ? '9+' : cartCount }}
-          </span>
+    <header class="sticky top-0 z-40 px-5 py-4" style="background: var(--bg); border-bottom: 1px solid var(--border);">
+      <div class="max-w-[480px] mx-auto flex items-center justify-between">
+        <NuxtLink to="/" class="text-lg font-bold tracking-tight" style="color: var(--brand);">summerTree</NuxtLink>
+        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">
+          장바구니<span v-if="cartCount > 0" class="ml-1 font-bold" style="color: var(--brand);">({{ cartCount }})</span>
         </NuxtLink>
       </div>
     </header>
 
-    <div class="max-w-[480px] mx-auto px-4 py-4">
-      <!-- 검색창 -->
-      <div class="relative mb-3">
-        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+    <div class="max-w-[480px] mx-auto px-5 pt-6">
+      <!-- 페이지 타이틀 -->
+      <div class="mb-6">
+        <p class="text-xs font-medium tracking-widest uppercase mb-1" style="color: var(--muted);">Collection</p>
+        <h1 class="text-3xl font-bold tracking-tight" style="color: var(--dark);">식물</h1>
+      </div>
+
+      <!-- 검색 -->
+      <div class="relative mb-4">
         <input
           v-model="searchQuery"
           @input="onSearchInput"
           type="text"
           placeholder="식물 이름 검색"
-          class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="w-full px-4 py-2.5 text-sm focus:outline-none"
+          style="background: var(--bg-light); border: 1px solid var(--border); border-radius: 4px; color: var(--dark);"
         />
       </div>
 
       <!-- 카테고리 필터 -->
-      <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+      <div class="flex gap-4 overflow-x-auto pb-1 mb-6 scrollbar-hide">
         <button
           @click="selectCategory(null)"
-          :class="[
-            'shrink-0 px-3 py-1.5 text-sm rounded-full transition-colors',
-            selectedCategoryId === null
-              ? 'bg-green-600 text-white'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50',
-          ]"
+          class="shrink-0 text-sm font-medium pb-1 transition-colors"
+          :style="selectedCategoryId === null
+            ? 'color: var(--brand); border-bottom: 1.5px solid var(--brand);'
+            : 'color: var(--muted); border-bottom: 1.5px solid transparent;'"
         >
           전체
         </button>
@@ -106,30 +99,31 @@ onMounted(async () => {
           v-for="cat in categories"
           :key="cat.id"
           @click="selectCategory(cat.id)"
-          :class="[
-            'shrink-0 px-3 py-1.5 text-sm rounded-full transition-colors',
-            selectedCategoryId === cat.id
-              ? 'bg-green-600 text-white'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50',
-          ]"
+          class="shrink-0 text-sm font-medium pb-1 transition-colors"
+          :style="selectedCategoryId === cat.id
+            ? 'color: var(--brand); border-bottom: 1.5px solid var(--brand);'
+            : 'color: var(--muted); border-bottom: 1.5px solid transparent;'"
         >
           {{ cat.name }}
         </button>
       </div>
 
+      <!-- 총 개수 -->
+      <p class="text-xs mb-4" style="color: var(--muted);">{{ total }}개</p>
+
       <!-- 로딩 -->
       <div v-if="isLoading" class="flex justify-center py-16">
-        <div class="w-7 h-7 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+        <div class="w-5 h-5 border border-t-transparent rounded-full animate-spin" style="border-color: var(--muted); border-top-color: transparent;" />
       </div>
 
       <!-- 빈 상태 -->
-      <div v-else-if="plants.length === 0" class="text-center py-16 text-gray-400 text-sm">
-        상품이 없습니다
+      <div v-else-if="plants.length === 0" class="text-center py-16 text-sm" style="color: var(--muted);">
+        식물이 없습니다
       </div>
 
       <!-- 상품 그리드 -->
       <div v-else>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-x-4 gap-y-8">
           <StorePlantCard
             v-for="plant in plants"
             :key="plant.id"
@@ -139,24 +133,28 @@ onMounted(async () => {
         </div>
 
         <!-- 페이지네이션 -->
-        <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 pt-6 pb-2">
+        <div v-if="totalPages > 1" class="flex items-center justify-center gap-6 py-10">
           <button
             @click="currentPage--; load()"
             :disabled="currentPage === 1"
-            class="px-3 py-2 text-sm rounded-lg border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+            class="text-sm font-medium disabled:opacity-30"
+            style="color: var(--muted);"
           >
-            이전
+            ← 이전
           </button>
-          <span class="text-sm text-gray-600">{{ currentPage }} / {{ totalPages }}</span>
+          <span class="text-xs" style="color: var(--muted);">{{ currentPage }} / {{ totalPages }}</span>
           <button
             @click="currentPage++; load()"
             :disabled="currentPage >= totalPages"
-            class="px-3 py-2 text-sm rounded-lg border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+            class="text-sm font-medium disabled:opacity-30"
+            style="color: var(--muted);"
           >
-            다음
+            다음 →
           </button>
         </div>
       </div>
+
+      <div class="pb-12" />
     </div>
   </div>
 </template>

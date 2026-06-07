@@ -56,50 +56,32 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen" style="background: var(--bg);">
     <CommonToast />
 
     <!-- 로딩 -->
     <div v-if="isLoading" class="flex items-center justify-center min-h-screen">
-      <div class="text-center">
-        <div class="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p class="text-sm text-gray-400">불러오는 중...</p>
-      </div>
+      <div class="w-5 h-5 border border-t-transparent rounded-full animate-spin" style="border-color: var(--muted); border-top-color: transparent;" />
     </div>
 
     <!-- 상품 없음 -->
     <div v-else-if="notFound" class="flex flex-col items-center justify-center min-h-screen px-6 text-center">
-      <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <p class="text-gray-500 font-medium mb-1">상품을 찾을 수 없습니다</p>
-      <p class="text-sm text-gray-400">삭제되었거나 존재하지 않는 상품입니다</p>
+      <p class="text-lg font-bold mb-2" style="color: var(--dark);">상품을 찾을 수 없습니다</p>
+      <p class="text-sm mb-8" style="color: var(--muted);">삭제되었거나 존재하지 않는 상품입니다</p>
+      <NuxtLink to="/plants" class="text-link">식물 목록으로 →</NuxtLink>
     </div>
 
     <!-- 상품 상세 -->
-    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-28">
+    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32">
 
       <!-- 헤더 -->
-      <div class="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <button @click="$router.back()" class="p-1.5 -ml-1.5 text-gray-500 hover:text-gray-800 transition-colors">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <NuxtLink to="/plants" class="text-sm font-semibold text-green-700">summerTree</NuxtLink>
-        </div>
-        <NuxtLink to="/cart" class="relative p-1.5 -mr-1.5">
-          <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </NuxtLink>
+      <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between" style="background: var(--bg); border-bottom: 1px solid var(--border);">
+        <NuxtLink to="/plants" class="text-sm font-medium" style="color: var(--muted);">← 식물 목록</NuxtLink>
+        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
       </div>
 
       <!-- 이미지 갤러리 -->
-      <div class="relative bg-gray-100">
+      <div class="relative" style="background: var(--bg-light);">
         <div v-if="plant.image_urls.length > 0">
           <div
             ref="galleryRef"
@@ -112,25 +94,21 @@ onMounted(load)
               :key="i"
               :src="url"
               :alt="`${plant.name} ${i + 1}`"
-              class="w-full h-72 shrink-0 snap-center object-cover"
+              class="w-full h-80 shrink-0 snap-center object-cover"
             />
           </div>
           <!-- 점 인디케이터 -->
-          <div
-            v-if="plant.image_urls.length > 1"
-            class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5"
-          >
+          <div v-if="plant.image_urls.length > 1" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
             <span
               v-for="(_, i) in plant.image_urls"
               :key="i"
-              class="w-1.5 h-1.5 rounded-full transition-colors"
-              :class="i === activeImageIndex ? 'bg-white' : 'bg-white/50'"
+              class="w-1 h-1 rounded-full transition-colors"
+              :style="i === activeImageIndex ? 'background: var(--dark);' : 'background: var(--border);'"
             />
           </div>
         </div>
-        <!-- 이미지 없음 -->
         <div v-else class="h-64 flex items-center justify-center">
-          <svg class="w-16 h-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-12 h-12" style="color: var(--border);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -138,81 +116,61 @@ onMounted(load)
       </div>
 
       <!-- 기본 정보 -->
-      <div class="px-4 pt-4 pb-3">
-        <!-- 카테고리 + 품절 -->
-        <div class="flex items-center gap-2 mb-1.5">
-          <span v-if="categoryName" class="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
-            {{ categoryName }}
-          </span>
-          <span v-if="isOutOfStock" class="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-medium">
-            품절
-          </span>
+      <div class="px-5 pt-6 pb-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span v-if="categoryName" class="text-xs font-medium tracking-widest uppercase" style="color: var(--muted);">{{ categoryName }}</span>
+          <span v-if="isOutOfStock" class="text-xs font-medium px-2 py-0.5 rounded" style="background: var(--border); color: var(--muted);">품절</span>
         </div>
-
-        <!-- 이름 -->
-        <h1 class="text-xl font-bold text-gray-900 leading-snug">{{ plant.name }}</h1>
-
-        <!-- 가격 -->
-        <p class="text-2xl font-bold text-green-600 mt-2">{{ formattedPrice }}</p>
-
-        <!-- 재고 -->
-        <p v-if="!isOutOfStock" class="text-xs text-gray-400 mt-1">재고 {{ plant.stock }}개</p>
-
-        <!-- 한 줄 설명 -->
-        <p v-if="plant.short_description" class="text-sm text-gray-600 mt-3 leading-relaxed">
-          {{ plant.short_description }}
-        </p>
+        <h1 class="text-2xl font-bold tracking-tight leading-snug mb-3" style="color: var(--dark);">{{ plant.name }}</h1>
+        <p class="text-2xl font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
+        <p v-if="!isOutOfStock" class="text-xs mt-1" style="color: var(--muted);">재고 {{ plant.stock }}개</p>
+        <p v-if="plant.short_description" class="text-sm leading-relaxed mt-4" style="color: var(--muted);">{{ plant.short_description }}</p>
       </div>
 
       <!-- 구분선 -->
-      <div class="h-2 bg-gray-50" />
+      <div class="mx-5 h-px" style="background: var(--border);" />
 
       <!-- 상세 설명 -->
-      <div v-if="plant.description" class="px-4 py-4">
-        <h2 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-1.5">
-          <span>📖</span> 상세 설명
-        </h2>
-        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ plant.description }}</p>
+      <div v-if="plant.description" class="px-5 py-6">
+        <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">상세 설명</h2>
+        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.description }}</p>
       </div>
 
-      <div v-if="plant.description && (plant.care_guide || plant.caution)" class="mx-4 border-t border-gray-100" />
+      <div v-if="plant.description && (plant.care_guide || plant.caution)" class="mx-5 h-px" style="background: var(--border);" />
 
       <!-- 키우는 방법 -->
-      <div v-if="plant.care_guide" class="px-4 py-4">
-        <h2 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-1.5">
-          <span>🌿</span> 키우는 방법
-        </h2>
-        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ plant.care_guide }}</p>
+      <div v-if="plant.care_guide" class="px-5 py-6">
+        <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">키우는 방법</h2>
+        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.care_guide }}</p>
       </div>
 
-      <div v-if="plant.care_guide && plant.caution" class="mx-4 border-t border-gray-100" />
+      <div v-if="plant.care_guide && plant.caution" class="mx-5 h-px" style="background: var(--border);" />
 
       <!-- 주의사항 -->
-      <div v-if="plant.caution" class="px-4 py-4">
-        <h2 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-1.5">
-          <span>⚠️</span> 주의사항
-        </h2>
-        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ plant.caution }}</p>
+      <div v-if="plant.caution" class="px-5 py-6">
+        <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">주의사항</h2>
+        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.caution }}</p>
       </div>
-
     </div>
 
-    <!-- 하단 고정 장바구니 버튼 -->
+    <!-- 하단 고정: 장바구니 담기 -->
     <div
       v-if="plant && !notFound && !isLoading"
-      class="bg-white border-t border-gray-100 px-4 py-3"
-      style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;"
+      class="px-5 py-5"
+      style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: var(--bg); border-top: 1px solid var(--border);"
     >
-      <div class="max-w-[480px] mx-auto">
+      <div class="max-w-[480px] mx-auto flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium tracking-widest uppercase mb-0.5" style="color: var(--muted);">가격</p>
+          <p class="text-lg font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
+        </div>
         <button
           @click="handleAddToCart"
           :disabled="isOutOfStock || isAddingToCart"
-          class="w-full py-3.5 text-base font-bold rounded-2xl transition-colors"
-          :class="isOutOfStock
-            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            : 'bg-green-600 hover:bg-green-700 text-white active:scale-[0.98]'"
+          class="text-link text-base disabled:opacity-40"
+          :style="isOutOfStock ? 'color: var(--muted);' : ''"
         >
-          {{ isOutOfStock ? '품절' : isAddingToCart ? '담는 중...' : '🛒 장바구니 담기' }}
+          {{ isOutOfStock ? '품절' : isAddingToCart ? '담는 중...' : '장바구니 담기 →' }}
         </button>
       </div>
     </div>

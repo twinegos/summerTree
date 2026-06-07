@@ -3,6 +3,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss'],
+  experimental: {
+    viewTransition: true,
+  },
   runtimeConfig: {
     // 서버 전용 (클라이언트 노출 안 됨)
     supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,

@@ -9,44 +9,36 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen" style="background: var(--bg);">
     <!-- 헤더 -->
-    <header class="px-4 py-4 flex items-center justify-between max-w-[480px] mx-auto">
-      <span class="text-lg font-bold text-green-700">summerTree</span>
-      <NuxtLink to="/cart" class="p-2 -mr-1">
-        <svg class="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      </NuxtLink>
+    <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
+      <span class="text-lg font-bold tracking-tight" style="color: var(--brand);">summerTree</span>
+      <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
     </header>
 
-    <div class="max-w-[480px] mx-auto px-4">
-      <!-- 히어로 섹션 -->
-      <div class="py-10 text-center">
-        <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
-          <span class="text-4xl">🌿</span>
-        </div>
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">summerTree</h1>
-        <p class="text-sm text-gray-500 leading-relaxed">
-          식물과 함께하는 일상<br />당신의 공간에 초록을 더해보세요
+    <div class="max-w-[480px] mx-auto px-5">
+      <!-- 히어로 -->
+      <section class="py-14">
+        <p class="text-xs font-medium tracking-widest uppercase mb-4" style="color: var(--muted);">Plant Shop</p>
+        <h1 class="text-5xl font-bold leading-[1.05] tracking-tight mb-6" style="color: var(--dark);">
+          당신의<br />공간에<br />초록을.
+        </h1>
+        <p class="text-sm leading-relaxed mb-8" style="color: var(--muted);">
+          식물과 함께하는 일상.<br />QR 코드로 식물의 이야기를 만나보세요.
         </p>
-        <NuxtLink
-          to="/plants"
-          class="inline-block mt-6 px-8 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-2xl transition-colors active:scale-[0.97]"
-        >
-          식물 보러가기
+        <NuxtLink to="/plants" class="text-link text-base">
+          식물 둘러보기 →
         </NuxtLink>
-      </div>
+      </section>
 
       <!-- 구분선 -->
-      <div class="h-px bg-gray-100 mb-6" />
+      <div class="h-px mb-8" style="background: var(--border);" />
 
-      <!-- 등록된 식물 미리보기 -->
-      <div v-if="plants.length > 0" class="pb-10">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-bold text-gray-800">등록된 식물</h2>
-          <NuxtLink to="/plants" class="text-sm text-green-600 font-medium">전체보기</NuxtLink>
+      <!-- 식물 미리보기 -->
+      <section v-if="plants.length > 0" class="pb-12">
+        <div class="flex items-end justify-between mb-5">
+          <h2 class="text-xl font-bold tracking-tight" style="color: var(--dark);">식물</h2>
+          <NuxtLink to="/plants" class="text-link text-sm">전체보기 →</NuxtLink>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <StorePlantCard
@@ -55,7 +47,12 @@ onMounted(async () => {
             :plant="plant"
           />
         </div>
-      </div>
+      </section>
+
+      <!-- 하단 브랜드 -->
+      <footer class="pb-8 text-center">
+        <p class="text-xs" style="color: var(--muted);">summerTree — 식물 전문 가게</p>
+      </footer>
     </div>
   </div>
 </template>
