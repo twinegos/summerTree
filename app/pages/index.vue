@@ -9,7 +9,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background: var(--bg);">
+  <div class="min-h-screen relative overflow-hidden" style="background: var(--bg);">
+    <!-- 배경 일러스트 -->
+    <div class="absolute bottom-0 left-0 right-0 pointer-events-none select-none" style="opacity: 0.08; color: var(--dark);">
+      <IllustrationMain class="w-full" />
+    </div>
     <!-- 헤더 -->
     <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
       <span class="text-lg font-bold tracking-tight" style="color: var(--brand);">summerTree</span>

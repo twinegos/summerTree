@@ -72,7 +72,11 @@ onMounted(load)
     </div>
 
     <!-- 상품 상세 -->
-    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32">
+    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32 relative">
+      <!-- 배경 일러스트 -->
+      <div class="absolute top-0 right-0 pointer-events-none select-none" style="opacity: 0.06; color: var(--dark); width: 55%;">
+        <IllustrationDetail class="w-full" />
+      </div>
 
       <!-- 헤더 -->
       <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between" style="background: var(--bg); border-bottom: 1px solid var(--border);">

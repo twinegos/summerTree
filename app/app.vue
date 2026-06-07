@@ -19,25 +19,25 @@ body {
   color: var(--dark);
 }
 
-/* View Transitions - 페이드 슬라이드 */
+/* View Transitions - 슬라이드 */
 ::view-transition-old(root) {
-  animation: vt-out 0.25s ease forwards;
+  animation: vt-slide-out 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 ::view-transition-new(root) {
-  animation: vt-in 0.25s ease forwards;
+  animation: vt-slide-in 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-@keyframes vt-out {
+@keyframes vt-slide-out {
   to {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateX(-24px);
   }
 }
 
-@keyframes vt-in {
+@keyframes vt-slide-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateX(24px);
   }
 }
 

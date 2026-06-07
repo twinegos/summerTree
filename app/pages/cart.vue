@@ -23,7 +23,11 @@ onMounted(fetchCart)
 </script>
 
 <template>
-  <div class="min-h-screen" style="background: var(--bg);">
+  <div class="min-h-screen relative overflow-hidden" style="background: var(--bg);">
+    <!-- 배경 일러스트 -->
+    <div class="absolute bottom-0 left-0 right-0 pointer-events-none select-none" style="opacity: 0.07; color: var(--dark);">
+      <IllustrationCart class="w-full" />
+    </div>
     <CommonToast />
 
     <!-- 헤더 -->
