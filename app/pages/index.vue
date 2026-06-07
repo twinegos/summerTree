@@ -9,13 +9,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background: var(--bg); position: relative;">
-    <!-- 배경 일러스트 -->
-    <div class="pointer-events-none select-none" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 0; opacity: 0.13; color: var(--dark);">
-      <IllustrationMain style="display: block; width: 100%;" />
-    </div>
-    <!-- 콘텐츠 레이어 -->
-    <div style="position: relative; z-index: 1;">
+  <div class="min-h-screen" style="background: var(--bg);">
     <!-- 헤더 -->
     <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
       <span class="text-lg font-bold tracking-tight" style="color: var(--brand);">summerTree</span>
@@ -60,6 +54,5 @@ onMounted(async () => {
         <p class="text-xs" style="color: var(--muted);">summerTree — 식물 전문 가게</p>
       </footer>
     </div>
-    </div><!-- /콘텐츠 레이어 -->
   </div>
 </template>

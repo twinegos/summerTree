@@ -72,13 +72,7 @@ onMounted(load)
     </div>
 
     <!-- 상품 상세 -->
-    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32" style="position: relative;">
-      <!-- 배경 일러스트 -->
-      <div class="pointer-events-none select-none" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 0; opacity: 0.13; color: var(--dark);">
-        <IllustrationDetail style="display: block; width: 100%;" />
-      </div>
-      <!-- 콘텐츠 레이어 -->
-      <div style="position: relative; z-index: 1;">
+    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32">
 
       <!-- 헤더 -->
       <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between" style="background: var(--bg); border-bottom: 1px solid var(--border);">
@@ -157,7 +151,6 @@ onMounted(load)
         <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">주의사항</h2>
         <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.caution }}</p>
       </div>
-      </div><!-- /콘텐츠 레이어 -->
     </div>
 
     <!-- 하단 고정: 장바구니 담기 -->
