@@ -36,7 +36,7 @@ onMounted(async () => {
         <NuxtLink
           to="/plants"
           class="block py-3 text-2xl font-bold tracking-tight transition-colors"
-          style="color: var(--dark); border-bottom: 1px solid var(--border);"
+          style="color: var(--dark);"
         >
           전체보기
         </NuxtLink>
@@ -45,7 +45,7 @@ onMounted(async () => {
           :key="cat.id"
           :to="`/plants?category=${encodeURIComponent(cat.name)}`"
           class="block py-3 text-2xl font-bold tracking-tight transition-colors"
-          style="color: var(--dark); border-bottom: 1px solid var(--border);"
+          style="color: var(--dark);"
         >
           {{ cat.name }}
         </NuxtLink>
