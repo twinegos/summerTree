@@ -1,10 +1,10 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-const { plants, fetchPlants } = usePlants()
+const { categories, fetchCategories } = useCategories()
 
 onMounted(async () => {
-  await fetchPlants({ pageSize: 4 })
+  await fetchCategories()
 })
 </script>
 
@@ -23,36 +23,33 @@ onMounted(async () => {
         <h1 class="text-5xl font-bold leading-[1.05] tracking-tight mb-6" style="color: var(--dark);">
           당신의<br />공간에<br />초록을.
         </h1>
-        <p class="text-sm leading-relaxed mb-8" style="color: var(--muted);">
+        <p class="text-sm leading-relaxed" style="color: var(--muted);">
           식물과 함께하는 일상.<br />QR 코드로 식물의 이야기를 만나보세요.
         </p>
-        <NuxtLink to="/plants" class="text-link text-base">
-          식물 둘러보기 →
-        </NuxtLink>
       </section>
 
       <!-- 구분선 -->
-      <div class="h-px mb-8" style="background: var(--border);" />
+      <div class="h-px" style="background: var(--border);" />
 
-      <!-- 식물 미리보기 -->
-      <section v-if="plants.length > 0" class="pb-12">
-        <div class="flex items-end justify-between mb-5">
-          <h2 class="text-xl font-bold tracking-tight" style="color: var(--dark);">식물</h2>
-          <NuxtLink to="/plants" class="text-link text-sm">전체보기 →</NuxtLink>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <StorePlantCard
-            v-for="plant in plants"
-            :key="plant.id"
-            :plant="plant"
-          />
-        </div>
-      </section>
-
-      <!-- 하단 브랜드 -->
-      <footer class="pb-8 text-center">
-        <p class="text-xs" style="color: var(--muted);">summerTree — 식물 전문 가게</p>
-      </footer>
+      <!-- 카테고리 목록 -->
+      <nav class="py-8">
+        <NuxtLink
+          to="/plants"
+          class="block py-3 text-2xl font-bold tracking-tight transition-colors"
+          style="color: var(--dark); border-bottom: 1px solid var(--border);"
+        >
+          전체보기
+        </NuxtLink>
+        <NuxtLink
+          v-for="cat in categories"
+          :key="cat.id"
+          :to="`/plants?category=${encodeURIComponent(cat.name)}`"
+          class="block py-3 text-2xl font-bold tracking-tight transition-colors"
+          style="color: var(--dark); border-bottom: 1px solid var(--border);"
+        >
+          {{ cat.name }}
+        </NuxtLink>
+      </nav>
     </div>
   </div>
 </template>

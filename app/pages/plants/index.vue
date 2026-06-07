@@ -46,8 +46,15 @@ function onSearchInput() {
   }, 300)
 }
 
+const route = useRoute()
+
 onMounted(async () => {
-  await Promise.all([fetchCategories(), load(), fetchCart()])
+  await fetchCategories()
+  if (route.query.category) {
+    const matched = categories.value.find(c => c.name === route.query.category)
+    if (matched) selectedCategoryId.value = matched.id
+  }
+  await Promise.all([load(), fetchCart()])
 })
 </script>
 
