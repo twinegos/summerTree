@@ -126,7 +126,7 @@ async function send() {
           emit('generate-image', genRes.imageUrl)
         } catch {
           messages.value.pop()
-          messages.value.push({ role: 'system', content: '이미지 생성에 실패했어요. GOOGLE_AI_API_KEY를 확인해주세요.' })
+          messages.value.push({ role: 'system', content: '이미지 생성에 실패했어요. OPENAI_API_KEY를 확인해주세요.' })
         }
         await scrollToBottom()
       }
