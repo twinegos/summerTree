@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
     portoneApiSecret: process.env.PORTONE_API_SECRET,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    googleAiApiKey: process.env.GOOGLE_AI_API_KEY,
+    openaiApiKey: process.env.OPENAI_API_KEY,
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_ANON_KEY,

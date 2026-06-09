@@ -25,3 +25,7 @@ logs
 
 # 민감 정보 파일
 *.rtf
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
