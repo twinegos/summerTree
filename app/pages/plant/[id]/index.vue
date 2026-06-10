@@ -89,71 +89,77 @@ onMounted(load)
         <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
       </div>
 
-      <!-- 이미지 갤러리 -->
-      <div class="relative" style="background: var(--bg-light);">
-        <div v-if="plant.image_urls.length > 0">
-          <div
-            ref="galleryRef"
-            class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
-            style="scrollbar-width: none;"
-            @scroll="onGalleryScroll"
-          >
-            <img
-              v-for="(url, i) in plant.image_urls"
-              :key="i"
-              :src="url"
-              :alt="`${plant.name} ${i + 1}`"
-              class="w-full h-80 shrink-0 snap-center object-cover"
-            />
-          </div>
-          <div v-if="plant.image_urls.length > 1" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-            <span
-              v-for="(_, i) in plant.image_urls"
-              :key="i"
-              class="w-1 h-1 rounded-full transition-colors"
-              :style="i === activeImageIndex ? 'background: var(--dark);' : 'background: var(--border);'"
-            />
-          </div>
+      <!-- 이미지 + 오버랩 텍스트 -->
+      <div class="relative overflow-hidden" style="background: var(--bg-light); height: 448px;">
+        <!-- 이미지 갤러리 -->
+        <div
+          v-if="plant.image_urls.length > 0"
+          ref="galleryRef"
+          class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth h-full"
+          style="scrollbar-width: none;"
+          @scroll="onGalleryScroll"
+        >
+          <img
+            v-for="(url, i) in plant.image_urls"
+            :key="i"
+            :src="url"
+            :alt="`${plant.name} ${i + 1}`"
+            class="shrink-0 snap-center object-cover"
+            style="width: 100%; height: 448px;"
+          />
         </div>
-        <div v-else class="h-64 flex items-center justify-center">
+        <div v-else class="h-full flex items-center justify-center">
           <svg class="w-12 h-12" style="color: var(--border);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-      </div>
 
-      <!-- 기본 정보 -->
-      <div class="px-5 pt-6 pb-6">
-        <!-- 카테고리 + 품절 -->
-        <div class="flex items-center gap-2 mb-2">
-          <span v-if="categoryName" class="text-xs font-medium tracking-widest uppercase" style="color: var(--muted);">{{ categoryName }}</span>
-          <span v-if="isOutOfStock" class="text-xs font-medium px-2 py-0.5 rounded" style="background: var(--border); color: var(--muted);">품절</span>
-        </div>
-
-        <!-- 이름 -->
-        <h1 class="text-2xl font-bold tracking-tight leading-snug mb-3" style="color: var(--dark);">{{ plant.name }}</h1>
-
-        <!-- 한 줄 설명 -->
-        <p v-if="plant.short_description" class="text-sm leading-relaxed mb-5" style="color: var(--muted);">{{ plant.short_description }}</p>
-
-        <!-- 관리 난이도 -->
-        <div class="flex items-center gap-3">
-          <span class="text-xs font-medium" style="color: var(--muted);">관리 난이도</span>
-          <div class="flex items-center gap-1.5">
+        <!-- 텍스트 오버레이 (하단) -->
+        <div
+          class="absolute bottom-0 left-0 right-0 px-5 pt-10 pb-6"
+          style="background: rgba(232, 234, 216, 0.3);"
+        >
+          <!-- 점 인디케이터 -->
+          <div v-if="plant.image_urls.length > 1" class="flex justify-center gap-1.5 mb-4">
             <span
-              v-for="n in 3"
-              :key="n"
-              class="w-3 h-3 rounded-full transition-colors"
-              :style="n <= careLevelConfig.dots
-                ? `background: ${careLevelConfig.color};`
-                : 'background: var(--border);'"
+              v-for="(_, i) in plant.image_urls"
+              :key="i"
+              class="w-1.5 h-1.5 rounded-full transition-colors"
+              :style="i === activeImageIndex ? 'background: var(--dark);' : 'background: rgba(28,26,20,0.3);'"
             />
           </div>
-          <span
-            class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
-            :style="`background: ${careLevelConfig.bg}; color: ${careLevelConfig.color};`"
-          >{{ careLevelConfig.label }}</span>
+
+          <!-- 카테고리 + 품절 -->
+          <div class="flex items-center gap-2 mb-2">
+            <span v-if="categoryName" class="text-xs font-medium tracking-widest uppercase" style="color: var(--dark); opacity: 0.6;">{{ categoryName }}</span>
+            <span v-if="isOutOfStock" class="text-xs font-medium px-2 py-0.5 rounded" style="background: var(--border); color: var(--muted);">품절</span>
+          </div>
+
+          <!-- 이름 -->
+          <h1 class="text-2xl font-bold tracking-tight leading-snug mb-2" style="color: var(--dark);">{{ plant.name }}</h1>
+
+          <!-- 간단 설명 -->
+          <p v-if="plant.short_description" class="text-sm leading-relaxed mb-4" style="color: var(--dark); opacity: 0.75;">{{ plant.short_description }}</p>
+
+          <!-- 관리 난이도 -->
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-medium" style="color: var(--dark); opacity: 0.6;">관리 난이도</span>
+            <div class="flex items-center gap-1.5">
+              <span
+                v-for="n in 3"
+                :key="n"
+                class="w-2.5 h-2.5 rounded-full transition-colors"
+                :style="n <= careLevelConfig.dots
+                  ? `background: ${careLevelConfig.color};`
+                  : 'background: rgba(28,26,20,0.2);'"
+              />
+            </div>
+            <span
+              class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+              :style="`background: ${careLevelConfig.bg}; color: ${careLevelConfig.color};`"
+            >{{ careLevelConfig.label }}</span>
+          </div>
         </div>
       </div>
 
