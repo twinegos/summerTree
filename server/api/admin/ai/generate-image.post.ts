@@ -16,12 +16,18 @@ export default defineEventHandler(async (event) => {
 
   const client = new OpenAI({ apiKey })
 
-  const response = await client.images.generate({
+  let response
+  try {
+    response = await client.images.generate({
     model: 'gpt-image-1',
     prompt: `식물 사진. 배경은 깔끔한 흰색이나 밝은 색. 사진 스타일: ${prompt}`,
-    n: 1,
-    size: '1024x1024',
-  })
+      n: 1,
+      size: '1024x1024',
+    })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    throw createError({ statusCode: 502, statusMessage: `OpenAI 오류: ${msg}` })
+  }
 
   const b64 = response.data[0]?.b64_json
   if (!b64) {

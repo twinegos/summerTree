@@ -124,9 +124,10 @@ async function send() {
             imageUrl: genRes.imageUrl,
           })
           emit('generate-image', genRes.imageUrl)
-        } catch {
+        } catch (genErr: unknown) {
           messages.value.pop()
-          messages.value.push({ role: 'system', content: '이미지 생성에 실패했어요. OPENAI_API_KEY를 확인해주세요.' })
+          const errMsg = (genErr as { statusMessage?: string })?.statusMessage || '이미지 생성에 실패했어요. OPENAI_API_KEY를 확인해주세요.'
+          messages.value.push({ role: 'system', content: errMsg })
         }
         await scrollToBottom()
       }
