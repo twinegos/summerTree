@@ -49,6 +49,7 @@ export type Database = {
           description: string | null
           care_guide: string | null
           caution: string | null
+          care_level: 'easy' | 'normal' | 'hard'
           price: number
           stock: number
           image_urls: string[]
@@ -64,6 +65,7 @@ export type Database = {
           description?: string | null
           care_guide?: string | null
           caution?: string | null
+          care_level?: 'easy' | 'normal' | 'hard'
           price: number
           stock?: number
           image_urls?: string[]
@@ -78,6 +80,7 @@ export type Database = {
           description?: string | null
           care_guide?: string | null
           caution?: string | null
+          care_level?: 'easy' | 'normal' | 'hard'
           price?: number
           stock?: number
           image_urls?: string[]

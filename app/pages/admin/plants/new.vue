@@ -19,6 +19,7 @@ const form = reactive({
   description: '',
   care_guide: '',
   caution: '',
+  care_level: 'normal' as 'easy' | 'normal' | 'hard',
 })
 
 const uploadedUrls = ref<string[]>([])
@@ -82,6 +83,7 @@ async function handleSubmit() {
       description: form.description.trim() || null,
       care_guide: form.care_guide.trim() || null,
       caution: form.caution.trim() || null,
+      care_level: form.care_level,
       image_urls: [],
     }
 
@@ -180,6 +182,23 @@ onMounted(() => { fetchCategories() })
           <label class="block text-sm font-medium text-gray-700 mb-1">간단 설명</label>
           <input v-model="form.short_description" type="text" placeholder="한 줄 설명 (선택)"
             class="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+
+        <!-- 관리 난이도 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">관리 난이도</label>
+          <div class="flex gap-2">
+            <button
+              v-for="opt in [{ value: 'easy', label: '쉬움', color: 'bg-green-50 border-green-400 text-green-800', active: 'bg-green-100' },
+                             { value: 'normal', label: '보통', color: 'bg-yellow-50 border-yellow-400 text-yellow-800', active: 'bg-yellow-100' },
+                             { value: 'hard', label: '까다로움', color: 'bg-orange-50 border-orange-400 text-orange-800', active: 'bg-orange-100' }]"
+              :key="opt.value"
+              type="button"
+              @click="form.care_level = opt.value as 'easy' | 'normal' | 'hard'"
+              class="flex-1 py-2.5 text-sm font-medium rounded-xl border-2 transition-colors"
+              :class="form.care_level === opt.value ? opt.color : 'border-gray-200 text-gray-500 bg-white'"
+            >{{ opt.label }}</button>
+          </div>
         </div>
 
         <!-- 상세 설명 -->

@@ -13,6 +13,7 @@ const isLoading = ref(true)
 const notFound = ref(false)
 const activeImageIndex = ref(0)
 const galleryRef = ref<HTMLElement | null>(null)
+const isAddingToCart = ref(false)
 
 const formattedPrice = computed(() =>
   plant.value ? plant.value.price.toLocaleString('ko-KR') + '원' : ''
@@ -20,14 +21,27 @@ const formattedPrice = computed(() =>
 const isOutOfStock = computed(() => (plant.value?.stock ?? 0) === 0)
 const categoryName = computed(() => plant.value?.categories?.name ?? '')
 
+const careLevelConfig = computed(() => {
+  const level = plant.value?.care_level ?? 'normal'
+  if (level === 'easy') return { label: '쉬움', color: '#2B4820', bg: '#D6E8CD', dots: 1 }
+  if (level === 'hard') return { label: '까다로움', color: '#7A3B1E', bg: '#F5D9C8', dots: 3 }
+  return { label: '보통', color: '#6B5B1A', bg: '#F5EDCC', dots: 2 }
+})
+
+const sections = computed(() => {
+  if (!plant.value) return []
+  const list = []
+  if (plant.value.description) list.push({ key: 'detail', label: '상세 설명' })
+  if (plant.value.care_guide) list.push({ key: 'care', label: '키우는 방법' })
+  if (plant.value.caution) list.push({ key: 'caution', label: '주의사항' })
+  return list
+})
+
 async function load() {
   isLoading.value = true
   const { data, error } = await fetchPlantById(route.params.id as string)
   isLoading.value = false
-  if (error || !data) {
-    notFound.value = true
-    return
-  }
+  if (error || !data) { notFound.value = true; return }
   plant.value = data
 }
 
@@ -38,18 +52,13 @@ function onGalleryScroll() {
   activeImageIndex.value = Math.min(index, plant.value.image_urls.length - 1)
 }
 
-const isAddingToCart = ref(false)
-
 async function handleAddToCart() {
   if (!plant.value || isAddingToCart.value) return
   isAddingToCart.value = true
   const { error } = await addToCart(plant.value.id)
   isAddingToCart.value = false
-  if (error) {
-    showError('장바구니 담기에 실패했습니다')
-  } else {
-    showSuccess('장바구니에 담겼습니다')
-  }
+  if (error) showError('장바구니 담기에 실패했습니다')
+  else showSuccess('장바구니에 담겼습니다')
 }
 
 onMounted(load)
@@ -64,7 +73,7 @@ onMounted(load)
       <div class="w-5 h-5 border border-t-transparent rounded-full animate-spin" style="border-color: var(--muted); border-top-color: transparent;" />
     </div>
 
-    <!-- 상품 없음 -->
+    <!-- 404 -->
     <div v-else-if="notFound" class="flex flex-col items-center justify-center min-h-screen px-6 text-center">
       <p class="text-lg font-bold mb-2" style="color: var(--dark);">상품을 찾을 수 없습니다</p>
       <p class="text-sm mb-8" style="color: var(--muted);">삭제되었거나 존재하지 않는 상품입니다</p>
@@ -97,7 +106,6 @@ onMounted(load)
               class="w-full h-80 shrink-0 snap-center object-cover"
             />
           </div>
-          <!-- 점 인디케이터 -->
           <div v-if="plant.image_urls.length > 1" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
             <span
               v-for="(_, i) in plant.image_urls"
@@ -116,44 +124,60 @@ onMounted(load)
       </div>
 
       <!-- 기본 정보 -->
-      <div class="px-5 pt-6 pb-4">
+      <div class="px-5 pt-6 pb-6">
+        <!-- 카테고리 + 품절 -->
         <div class="flex items-center gap-2 mb-2">
           <span v-if="categoryName" class="text-xs font-medium tracking-widest uppercase" style="color: var(--muted);">{{ categoryName }}</span>
           <span v-if="isOutOfStock" class="text-xs font-medium px-2 py-0.5 rounded" style="background: var(--border); color: var(--muted);">품절</span>
         </div>
+
+        <!-- 이름 -->
         <h1 class="text-2xl font-bold tracking-tight leading-snug mb-3" style="color: var(--dark);">{{ plant.name }}</h1>
-        <p class="text-2xl font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
-        <p v-if="!isOutOfStock" class="text-xs mt-1" style="color: var(--muted);">재고 {{ plant.stock }}개</p>
-        <p v-if="plant.short_description" class="text-sm leading-relaxed mt-4" style="color: var(--muted);">{{ plant.short_description }}</p>
+
+        <!-- 한 줄 설명 -->
+        <p v-if="plant.short_description" class="text-sm leading-relaxed mb-5" style="color: var(--muted);">{{ plant.short_description }}</p>
+
+        <!-- 관리 난이도 -->
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-medium" style="color: var(--muted);">관리 난이도</span>
+          <div class="flex items-center gap-1.5">
+            <span
+              v-for="n in 3"
+              :key="n"
+              class="w-3 h-3 rounded-full transition-colors"
+              :style="n <= careLevelConfig.dots
+                ? `background: ${careLevelConfig.color};`
+                : 'background: var(--border);'"
+            />
+          </div>
+          <span
+            class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+            :style="`background: ${careLevelConfig.bg}; color: ${careLevelConfig.color};`"
+          >{{ careLevelConfig.label }}</span>
+        </div>
       </div>
 
-      <!-- 구분선 -->
-      <div class="mx-5 h-px" style="background: var(--border);" />
-
-      <!-- 상세 설명 -->
-      <div v-if="plant.description" class="px-5 py-6">
-        <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">상세 설명</h2>
-        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.description }}</p>
-      </div>
-
-      <div v-if="plant.description && (plant.care_guide || plant.caution)" class="mx-5 h-px" style="background: var(--border);" />
-
-      <!-- 키우는 방법 -->
-      <div v-if="plant.care_guide" class="px-5 py-6">
-        <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">키우는 방법</h2>
-        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.care_guide }}</p>
-      </div>
-
-      <div v-if="plant.care_guide && plant.caution" class="mx-5 h-px" style="background: var(--border);" />
-
-      <!-- 주의사항 -->
-      <div v-if="plant.caution" class="px-5 py-6">
-        <h2 class="text-xs font-medium tracking-widest uppercase mb-3" style="color: var(--muted);">주의사항</h2>
-        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark);">{{ plant.caution }}</p>
+      <!-- 섹션 내비게이션 -->
+      <div v-if="sections.length > 0" style="border-top: 1px solid var(--border);">
+        <NuxtLink
+          v-for="section in sections"
+          :key="section.key"
+          :to="`/plant/${plant.id}/${section.key}`"
+          class="flex items-center justify-between px-5 py-5 transition-colors"
+          style="border-bottom: 1px solid var(--border);"
+          :style="{ background: 'transparent' }"
+          @mouseenter="($event.currentTarget as HTMLElement).style.background = 'var(--bg-light)'"
+          @mouseleave="($event.currentTarget as HTMLElement).style.background = 'transparent'"
+        >
+          <span class="text-lg font-semibold tracking-tight" style="color: var(--dark);">{{ section.label }}</span>
+          <svg class="w-5 h-5 shrink-0" style="color: var(--muted);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+          </svg>
+        </NuxtLink>
       </div>
     </div>
 
-    <!-- 하단 고정: 장바구니 담기 -->
+    <!-- 하단 고정: 가격 + 장바구니 -->
     <div
       v-if="plant && !notFound && !isLoading"
       class="px-5 py-5"
@@ -162,7 +186,7 @@ onMounted(load)
       <div class="max-w-[480px] mx-auto flex items-center justify-between">
         <div>
           <p class="text-xs font-medium tracking-widest uppercase mb-0.5" style="color: var(--muted);">가격</p>
-          <p class="text-lg font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
+          <p class="text-xl font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
         </div>
         <button
           @click="handleAddToCart"
