@@ -24,6 +24,9 @@ const form = reactive({
   care_guide: '',
   caution: '',
   care_level: 'normal' as 'easy' | 'normal' | 'hard',
+  page_bg_color: '' as string,
+  page_bg_image: '' as string,
+  page_font: 'sans' as 'sans' | 'serif' | 'mono',
 })
 
 const existingImageUrls = ref<string[]>([])
@@ -68,6 +71,14 @@ function handleAiFillFields(fields: Record<string, unknown>) {
 
 function handleAiGenerateImage(imageUrl: string) {
   newUploadedUrls.value = [imageUrl, ...newUploadedUrls.value]
+}
+
+function handleAiStylePage(style: { bg_color?: string; bg_image_url?: string; font?: string }) {
+  if (style.bg_color) form.page_bg_color = style.bg_color
+  if (style.bg_image_url) form.page_bg_image = style.bg_image_url
+  if (style.font && ['sans', 'serif', 'mono'].includes(style.font)) {
+    form.page_font = style.font as 'sans' | 'serif' | 'mono'
+  }
 }
 
 function validate(): boolean {
@@ -144,6 +155,9 @@ async function handleSubmit() {
       care_guide: form.care_guide.trim() || null,
       caution: form.caution.trim() || null,
       care_level: form.care_level,
+      page_bg_color: form.page_bg_color.trim() || null,
+      page_bg_image: form.page_bg_image.trim() || null,
+      page_font: form.page_font,
       image_urls: allImageUrls,
     }
 
@@ -186,6 +200,9 @@ onMounted(async () => {
   form.care_guide = plant.care_guide ?? ''
   form.caution = plant.caution ?? ''
   form.care_level = (plant.care_level as 'easy' | 'normal' | 'hard') ?? 'normal'
+  form.page_bg_color = plant.page_bg_color ?? ''
+  form.page_bg_image = plant.page_bg_image ?? ''
+  form.page_font = (plant.page_font as 'sans' | 'serif' | 'mono') ?? 'sans'
   existingImageUrls.value = [...plant.image_urls]
 
   isLoading.value = false
@@ -219,6 +236,7 @@ onMounted(async () => {
             :form-state="chatFormState"
             @fill-fields="handleAiFillFields"
             @generate-image="handleAiGenerateImage"
+            @style-page="handleAiStylePage"
           />
         </div>
 
@@ -350,6 +368,71 @@ onMounted(async () => {
             placeholder="주의사항을 입력해주세요 (선택)"
             class="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
           />
+        </div>
+
+        <!-- 페이지 스타일 -->
+        <div class="rounded-xl border border-gray-200 p-4 space-y-4">
+          <p class="text-sm font-semibold text-gray-700">페이지 스타일</p>
+
+          <!-- 배경색 -->
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-2">배경색</label>
+            <div class="flex items-center gap-3">
+              <input v-model="form.page_bg_color" type="color" class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5" />
+              <input v-model="form.page_bg_color" type="text" placeholder="#E8EAD8 또는 비워두면 기본값"
+                class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <button v-if="form.page_bg_color" type="button" @click="form.page_bg_color = ''"
+                class="text-xs text-gray-400 hover:text-gray-600 shrink-0">초기화</button>
+            </div>
+          </div>
+
+          <!-- 배경 이미지 -->
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-2">배경 이미지 URL</label>
+            <div class="flex items-center gap-2">
+              <input v-model="form.page_bg_image" type="url" placeholder="이미지 URL (AI 생성 이미지 사용 가능)"
+                class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <button v-if="form.page_bg_image" type="button" @click="form.page_bg_image = ''"
+                class="text-xs text-gray-400 hover:text-gray-600 shrink-0">초기화</button>
+            </div>
+            <div v-if="form.page_bg_image" class="mt-2 h-16 rounded-lg overflow-hidden border border-gray-200">
+              <img :src="form.page_bg_image" class="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          <!-- 폰트 -->
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-2">폰트</label>
+            <div class="flex gap-2">
+              <button v-for="opt in [{ value: 'sans', label: '기본', preview: '가나다' },
+                                     { value: 'serif', label: '세리프', preview: '가나다' },
+                                     { value: 'mono', label: '모노', preview: '가나다' }]"
+                :key="opt.value" type="button"
+                @click="form.page_font = opt.value as 'sans' | 'serif' | 'mono'"
+                class="flex-1 py-2.5 text-sm rounded-xl border-2 transition-colors text-center"
+                :class="form.page_font === opt.value ? 'border-green-500 bg-green-50 text-green-800' : 'border-gray-200 text-gray-600 bg-white'">
+                <span class="block text-xs text-gray-400 mb-0.5"
+                  :style="opt.value === 'serif' ? 'font-family: serif' : opt.value === 'mono' ? 'font-family: monospace' : ''">
+                  {{ opt.preview }}
+                </span>
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 미리보기 -->
+          <div v-if="form.page_bg_color || form.page_bg_image"
+            class="rounded-lg overflow-hidden border border-gray-200 h-20 flex items-center justify-center relative"
+            :style="{
+              backgroundColor: form.page_bg_color || undefined,
+              backgroundImage: form.page_bg_image ? `url(${form.page_bg_image})` : undefined,
+              backgroundSize: 'cover', backgroundPosition: 'center'
+            }">
+            <span class="text-sm font-bold px-3 py-1 rounded bg-white/60"
+              :style="form.page_font === 'serif' ? 'font-family: serif' : form.page_font === 'mono' ? 'font-family: monospace' : ''">
+              {{ form.name || '식물 이름' }}
+            </span>
+          </div>
         </div>
 
         <!-- 기존 이미지 목록 -->

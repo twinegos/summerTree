@@ -21,6 +21,29 @@ const formattedPrice = computed(() =>
 const isOutOfStock = computed(() => (plant.value?.stock ?? 0) === 0)
 const categoryName = computed(() => plant.value?.categories?.name ?? '')
 
+const fontFamilyMap: Record<string, string> = {
+  serif: '"Noto Serif", Georgia, "Batang", serif',
+  mono: '"Courier New", Courier, monospace',
+  sans: 'inherit',
+}
+
+const pageStyle = computed(() => {
+  if (!plant.value) return {}
+  const s: Record<string, string> = {}
+  if (plant.value.page_bg_image) {
+    s.backgroundImage = `url(${plant.value.page_bg_image})`
+    s.backgroundSize = 'cover'
+    s.backgroundAttachment = 'local'
+    s.backgroundPosition = 'center'
+  }
+  if (plant.value.page_bg_color) {
+    s.backgroundColor = plant.value.page_bg_color
+  }
+  const font = plant.value.page_font || 'sans'
+  if (font !== 'sans') s.fontFamily = fontFamilyMap[font] ?? 'inherit'
+  return s
+})
+
 const careLevelConfig = computed(() => {
   const level = plant.value?.care_level ?? 'normal'
   if (level === 'easy') return { label: '쉬움', color: '#2B4820', bg: '#D6E8CD', dots: 1 }
@@ -65,7 +88,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="min-h-screen" style="background: var(--bg);">
+  <div class="min-h-screen" :style="{ background: 'var(--bg)', ...pageStyle }">
     <CommonToast />
 
     <!-- 로딩 -->

@@ -29,9 +29,16 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+interface StylePageAction {
+  bg_color?: string
+  bg_image_url?: string
+  font?: string
+}
+
 const emit = defineEmits<{
   'fill-fields': [fields: FillFieldsAction]
   'generate-image': [imageUrl: string]
+  'style-page': [style: StylePageAction]
 }>()
 
 const messages = ref<ChatMessage[]>([
@@ -82,10 +89,11 @@ async function send() {
     const res = await $fetch<{
       reply: string
       actions: Array<{
-        type: 'fill_fields' | 'generate_image' | 'edit_image'
+        type: 'fill_fields' | 'generate_image' | 'edit_image' | 'style_page'
         fields?: FillFieldsAction
         prompt?: string
         imageUrl?: string
+        style?: StylePageAction
       }>
     }>('/api/admin/ai/chat', {
       method: 'POST',
@@ -151,6 +159,15 @@ async function send() {
           messages.value.push({ role: 'system', content: errMsg })
         }
         await scrollToBottom()
+      } else if (action.type === 'style_page' && action.style) {
+        emit('style-page', action.style)
+        if (!replyText) {
+          const parts = []
+          if (action.style.bg_color) parts.push(`배경색 ${action.style.bg_color}`)
+          if (action.style.bg_image_url) parts.push('배경 이미지')
+          if (action.style.font) parts.push(`폰트 ${action.style.font}`)
+          replyText = `페이지 스타일을 변경했어요! (${parts.join(', ')})`
+        }
       }
     }
 

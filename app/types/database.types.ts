@@ -50,6 +50,9 @@ export type Database = {
           care_guide: string | null
           caution: string | null
           care_level: 'easy' | 'normal' | 'hard'
+          page_bg_color: string | null
+          page_bg_image: string | null
+          page_font: 'sans' | 'serif' | 'mono'
           price: number
           stock: number
           image_urls: string[]
@@ -66,6 +69,9 @@ export type Database = {
           care_guide?: string | null
           caution?: string | null
           care_level?: 'easy' | 'normal' | 'hard'
+          page_bg_color?: string | null
+          page_bg_image?: string | null
+          page_font?: 'sans' | 'serif' | 'mono'
           price: number
           stock?: number
           image_urls?: string[]
@@ -81,6 +87,9 @@ export type Database = {
           care_guide?: string | null
           caution?: string | null
           care_level?: 'easy' | 'normal' | 'hard'
+          page_bg_color?: string | null
+          page_bg_image?: string | null
+          page_font?: 'sans' | 'serif' | 'mono'
           price?: number
           stock?: number
           image_urls?: string[]
