@@ -41,6 +41,35 @@ const errors = reactive({
   stock: '',
 })
 
+const chatFormState = computed(() => ({
+  name: form.name,
+  category_name: categories.value.find(c => c.id === form.category_id)?.name ?? '',
+  price: form.price,
+  short_description: form.short_description,
+  description: form.description,
+  care_guide: form.care_guide,
+  caution: form.caution,
+}))
+
+function handleAiFillFields(fields: Record<string, unknown>) {
+  if (fields.name) form.name = String(fields.name)
+  if (fields.short_description) form.short_description = String(fields.short_description)
+  if (fields.description) form.description = String(fields.description)
+  if (fields.care_guide) form.care_guide = String(fields.care_guide)
+  if (fields.caution) form.caution = String(fields.caution)
+  if (fields.price) form.price = String(fields.price)
+  if (fields.suggested_category) {
+    const matched = categories.value.find(c =>
+      c.name.includes(String(fields.suggested_category)) || String(fields.suggested_category).includes(c.name)
+    )
+    if (matched) form.category_id = matched.id
+  }
+}
+
+function handleAiGenerateImage(imageUrl: string) {
+  newUploadedUrls.value = [imageUrl, ...newUploadedUrls.value]
+}
+
 function validate(): boolean {
   let valid = true
   errors.name = ''
@@ -183,7 +212,17 @@ onMounted(async () => {
         불러오는 중...
       </div>
 
-      <form v-else @submit.prevent="handleSubmit" class="space-y-4">
+      <template v-else>
+        <!-- AI 어시스턴트 채팅 -->
+        <div class="mb-6">
+          <AdminAiChat
+            :form-state="chatFormState"
+            @fill-fields="handleAiFillFields"
+            @generate-image="handleAiGenerateImage"
+          />
+        </div>
+
+      <form @submit.prevent="handleSubmit" class="space-y-4">
         <!-- 이름 -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -375,6 +414,7 @@ onMounted(async () => {
           </button>
         </div>
       </form>
+      </template>
     </div>
   </div>
 </template>
