@@ -90,7 +90,7 @@ onMounted(load)
       </div>
 
       <!-- 이미지 + 오버랩 텍스트 -->
-      <div class="relative overflow-hidden" style="background: var(--bg-light); height: 448px;">
+      <div class="relative overflow-hidden" style="background: var(--bg-light); height: 672px;">
         <!-- 이미지 갤러리 -->
         <div
           v-if="plant.image_urls.length > 0"
@@ -105,7 +105,7 @@ onMounted(load)
             :src="url"
             :alt="`${plant.name} ${i + 1}`"
             class="shrink-0 snap-center object-cover"
-            style="width: 100%; height: 448px;"
+            style="width: 100%; height: 672px;"
           />
         </div>
         <div v-else class="h-full flex items-center justify-center">
@@ -118,7 +118,7 @@ onMounted(load)
         <!-- 텍스트 오버레이 (하단) -->
         <div
           class="absolute bottom-0 left-0 right-0 px-5 pt-10 pb-6"
-          style="background: rgba(232, 234, 216, 0.3);"
+          style="background: rgba(232, 234, 216, 0.75);"
         >
           <!-- 점 인디케이터 -->
           <div v-if="plant.image_urls.length > 1" class="flex justify-center gap-1.5 mb-4">
