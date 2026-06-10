@@ -23,8 +23,8 @@ const thumbnailUrl = computed(() =>
 
 <template>
   <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex gap-3 p-3">
-    <!-- 썸네일 -->
-    <div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+    <!-- 썸네일 (클릭 → 수정 페이지) -->
+    <NuxtLink :to="`/admin/plants/${plant.id}/edit`" class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
       <img
         v-if="thumbnailUrl"
         :src="thumbnailUrl"
@@ -35,13 +35,13 @@ const thumbnailUrl = computed(() =>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
-    </div>
+    </NuxtLink>
 
     <!-- 정보 -->
     <div class="flex-1 min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
-          <p class="font-medium text-gray-900 truncate">{{ plant.name }}</p>
+          <NuxtLink :to="`/admin/plants/${plant.id}/edit`" class="font-medium text-gray-900 truncate block hover:text-green-700 transition-colors">{{ plant.name }}</NuxtLink>
           <p class="text-xs text-gray-500 mt-0.5">{{ categoryName }}</p>
         </div>
         <div v-if="plant.stock === 0" class="shrink-0">
