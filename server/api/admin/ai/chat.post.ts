@@ -35,13 +35,25 @@ const tools: Anthropic.Tool[] = [
   },
   {
     name: 'generate_image',
-    description: 'Nano Banana(Google Gemini AI)로 식물 이미지를 생성합니다.',
+    description: 'OpenAI로 식물 이미지를 새로 생성합니다. 이미지가 없을 때 사용합니다.',
     input_schema: {
       type: 'object' as const,
       properties: {
         prompt: { type: 'string', description: '이미지 생성 프롬프트 (영어 권장, 예: monstera plant in white ceramic pot, bright background)' },
       },
       required: ['prompt'],
+    },
+  },
+  {
+    name: 'edit_image',
+    description: '기존 이미지를 AI로 수정합니다. 사용자가 이미지를 첨부하고 수정을 요청할 때 사용합니다. 배경 변경, 스타일 변경, 색상 변경, 객체 추가/제거, 이모티콘 스타일 변환 등에 사용합니다.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        prompt: { type: 'string', description: '수정 내용 설명 (영어 권장, 예: remove background and make it white, make it look like a cute emoji sticker, change background to soft sage green)' },
+        imageUrl: { type: 'string', description: '수정할 이미지 URL. 사용자가 첨부한 이미지 URL을 그대로 사용.' },
+      },
+      required: ['prompt', 'imageUrl'],
     },
   },
 ]
@@ -75,8 +87,9 @@ export default defineEventHandler(async (event) => {
 
 역할:
 - 식물 사진을 분석해서 정보를 자동으로 채워주세요 (fill_fields 도구 사용)
-- 사용자가 요청하면 이미지를 생성해주세요 (generate_image 도구 사용)
-- 기존 내용 수정 요청도 fill_fields로 처리하세요
+- 새 이미지 생성 요청 → generate_image 도구 사용
+- 기존 이미지 수정 요청(배경 변경, 이모티콘 변환, 색상 변경 등) → edit_image 도구 사용. imageUrl은 사용자가 첨부한 이미지 URL을 그대로 전달하세요.
+- 기존 텍스트 내용 수정 요청 → fill_fields 도구 사용
 - 한국어로 친근하게 대화하세요
 - 응답은 간결하게 1-3문장으로 해주세요`
 
@@ -115,9 +128,10 @@ export default defineEventHandler(async (event) => {
   // 응답 파싱
   let replyText = ''
   const actions: Array<{
-    type: 'fill_fields' | 'generate_image'
+    type: 'fill_fields' | 'generate_image' | 'edit_image'
     fields?: Record<string, unknown>
     prompt?: string
+    imageUrl?: string
   }> = []
 
   for (const block of response.content) {
@@ -129,6 +143,9 @@ export default defineEventHandler(async (event) => {
       } else if (block.name === 'generate_image') {
         const input = block.input as { prompt: string }
         actions.push({ type: 'generate_image', prompt: input.prompt })
+      } else if (block.name === 'edit_image') {
+        const input = block.input as { prompt: string; imageUrl: string }
+        actions.push({ type: 'edit_image', prompt: input.prompt, imageUrl: input.imageUrl })
       }
     }
   }
@@ -136,6 +153,7 @@ export default defineEventHandler(async (event) => {
   if (!replyText && actions.length > 0) {
     if (actions.some(a => a.type === 'fill_fields')) replyText = '폼을 채웠어요!'
     if (actions.some(a => a.type === 'generate_image')) replyText = (replyText ? replyText + ' ' : '') + '이미지를 생성할게요!'
+    if (actions.some(a => a.type === 'edit_image')) replyText = (replyText ? replyText + ' ' : '') + '이미지를 수정할게요!'
   }
 
   return { reply: replyText, actions }

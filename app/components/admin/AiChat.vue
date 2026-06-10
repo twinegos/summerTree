@@ -82,9 +82,10 @@ async function send() {
     const res = await $fetch<{
       reply: string
       actions: Array<{
-        type: 'fill_fields' | 'generate_image'
+        type: 'fill_fields' | 'generate_image' | 'edit_image'
         fields?: FillFieldsAction
         prompt?: string
+        imageUrl?: string
       }>
     }>('/api/admin/ai/chat', {
       method: 'POST',
@@ -118,15 +119,35 @@ async function send() {
             body: { prompt: action.prompt },
           })
           messages.value.pop()
-          messages.value.push({
-            role: 'system',
-            content: '이미지가 생성되었어요!',
-            imageUrl: genRes.imageUrl,
-          })
+          messages.value.push({ role: 'system', content: '이미지가 생성되었어요!', imageUrl: genRes.imageUrl })
           emit('generate-image', genRes.imageUrl)
         } catch (genErr: unknown) {
           messages.value.pop()
           const errMsg = (genErr as { statusMessage?: string })?.statusMessage || '이미지 생성에 실패했어요. OPENAI_API_KEY를 확인해주세요.'
+          messages.value.push({ role: 'system', content: errMsg })
+        }
+        await scrollToBottom()
+      } else if (action.type === 'edit_image' && action.prompt && action.imageUrl) {
+        replyText = replyText || '이미지를 수정할게요...'
+        messages.value.push({ role: 'assistant', content: replyText })
+        await scrollToBottom()
+        replyText = ''
+
+        const editLoadingMsg: ChatMessage = { role: 'system', content: '✏️ 이미지 수정 중...', isLoading: true }
+        messages.value.push(editLoadingMsg)
+        await scrollToBottom()
+
+        try {
+          const editRes = await $fetch<{ imageUrl: string }>('/api/admin/ai/edit-image', {
+            method: 'POST',
+            body: { imageUrl: action.imageUrl, prompt: action.prompt },
+          })
+          messages.value.pop()
+          messages.value.push({ role: 'system', content: '이미지 수정이 완료됐어요!', imageUrl: editRes.imageUrl })
+          emit('generate-image', editRes.imageUrl)
+        } catch (editErr: unknown) {
+          messages.value.pop()
+          const errMsg = (editErr as { statusMessage?: string })?.statusMessage || '이미지 수정에 실패했어요.'
           messages.value.push({ role: 'system', content: errMsg })
         }
         await scrollToBottom()
