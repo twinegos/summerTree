@@ -6,8 +6,10 @@ export default defineEventHandler(async (event) => {
   const apiKey = config.openaiApiKey as string | undefined
 
   if (!apiKey) {
+    console.error('[generate-image] OPENAI_API_KEY 없음')
     throw createError({ statusCode: 503, statusMessage: 'OPENAI_API_KEY가 설정되지 않았습니다' })
   }
+  console.log('[generate-image] API 키 확인됨, 길이:', apiKey.length)
 
   const { prompt } = await readBody(event) as { prompt: string }
   if (!prompt) {
@@ -26,6 +28,7 @@ export default defineEventHandler(async (event) => {
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
+    console.error('[generate-image] OpenAI 오류:', msg)
     throw createError({ statusCode: 502, statusMessage: `OpenAI 오류: ${msg}` })
   }
 
