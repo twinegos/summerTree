@@ -50,6 +50,11 @@ onMounted(async () => {
           {{ cat.name }}
         </NuxtLink>
       </nav>
+
+      <!-- 푸터 -->
+      <div class="py-8 flex justify-end" style="border-top: 1px solid var(--border);">
+        <NuxtLink to="/admin" class="text-xs" style="color: var(--border);">관리자</NuxtLink>
+      </div>
     </div>
   </div>
 </template>
