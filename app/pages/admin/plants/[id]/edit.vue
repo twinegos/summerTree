@@ -27,6 +27,7 @@ const form = reactive({
   page_bg_color: '' as string,
   page_bg_image: '' as string,
   page_font: 'sans' as 'sans' | 'serif' | 'mono',
+  image_position: '50% 50%' as string,
 })
 
 const existingImageUrls = ref<string[]>([])
@@ -71,6 +72,15 @@ function handleAiFillFields(fields: Record<string, unknown>) {
 
 function handleAiGenerateImage(imageUrl: string) {
   newUploadedUrls.value = [imageUrl, ...newUploadedUrls.value]
+}
+
+async function handleAiRegisterImage(imageUrl: string) {
+  if (newUploadedUrls.value.includes(imageUrl) || existingImageUrls.value.includes(imageUrl)) return
+  newUploadedUrls.value = [imageUrl, ...newUploadedUrls.value]
+  await updatePlant(plantId, {
+    image_urls: [...existingImageUrls.value, imageUrl, ...newUploadedUrls.value.filter(u => u !== imageUrl)],
+  })
+  showSuccess('이미지가 대표사진으로 등록됐습니다')
 }
 
 function handleAiStylePage(style: { bg_color?: string; bg_image_url?: string; font?: string }) {
@@ -158,6 +168,7 @@ async function handleSubmit() {
       page_bg_color: form.page_bg_color.trim() || null,
       page_bg_image: form.page_bg_image.trim() || null,
       page_font: form.page_font,
+      image_position: form.image_position,
       image_urls: allImageUrls,
     }
 
@@ -203,6 +214,7 @@ onMounted(async () => {
   form.page_bg_color = plant.page_bg_color ?? ''
   form.page_bg_image = plant.page_bg_image ?? ''
   form.page_font = (plant.page_font as 'sans' | 'serif' | 'mono') ?? 'sans'
+  form.image_position = plant.image_position ?? '50% 50%'
   existingImageUrls.value = [...plant.image_urls]
 
   isLoading.value = false
@@ -235,9 +247,11 @@ onMounted(async () => {
           <AdminAiChat
             :form-state="chatFormState"
             :image-urls="[...existingImageUrls, ...newUploadedUrls]"
+            :plant-id="plantId"
             @fill-fields="handleAiFillFields"
             @generate-image="handleAiGenerateImage"
             @style-page="handleAiStylePage"
+            @register-image="handleAiRegisterImage"
           />
         </div>
 
@@ -369,6 +383,40 @@ onMounted(async () => {
             placeholder="주의사항을 입력해주세요 (선택)"
             class="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
           />
+        </div>
+
+        <!-- 이미지 위치 조절 -->
+        <div class="rounded-xl border border-gray-200 p-4 space-y-3">
+          <p class="text-sm font-semibold text-gray-700">이미지 위치</p>
+          <p class="text-xs text-gray-400">상세 페이지 hero 및 썸네일에 적용됩니다</p>
+          <!-- 3×3 그리드 프리셋 -->
+          <div class="grid grid-cols-3 gap-1.5 w-36">
+            <button
+              v-for="pos in [
+                { label: '↖', value: '0% 0%' }, { label: '↑', value: '50% 0%' }, { label: '↗', value: '100% 0%' },
+                { label: '←', value: '0% 50%' }, { label: '·', value: '50% 50%' }, { label: '→', value: '100% 50%' },
+                { label: '↙', value: '0% 100%' }, { label: '↓', value: '50% 100%' }, { label: '↘', value: '100% 100%' },
+              ]"
+              :key="pos.value"
+              type="button"
+              @click="form.image_position = pos.value"
+              class="aspect-square rounded-lg text-sm font-medium transition-colors flex items-center justify-center border"
+              :class="form.image_position === pos.value
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-green-400'"
+            >{{ pos.label }}</button>
+          </div>
+          <!-- 이미지 미리보기 with position -->
+          <div
+            v-if="existingImageUrls.length > 0 || newUploadedUrls.length > 0"
+            class="w-full h-28 rounded-lg overflow-hidden border border-gray-200"
+          >
+            <img
+              :src="existingImageUrls[0] || newUploadedUrls[0]"
+              class="w-full h-full object-cover"
+              :style="{ objectPosition: form.image_position }"
+            />
+          </div>
         </div>
 
         <!-- 페이지 스타일 -->

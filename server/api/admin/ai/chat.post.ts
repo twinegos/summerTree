@@ -63,9 +63,20 @@ const tools: Anthropic.Tool[] = [
       type: 'object' as const,
       properties: {
         prompt: { type: 'string', description: '수정 내용 설명 (영어 권장, 예: remove background and make it white, make it look like a cute emoji sticker, change background to soft sage green)' },
-        imageUrl: { type: 'string', description: '수정할 이미지 URL. 사용자가 첨부한 이미지 URL을 그대로 사용.' },
+        imageUrl: { type: 'string', description: '수정할 이미지 URL. 사용자가 첨부한 이미지 URL, 또는 이전에 생성/수정된 이미지 URL, 또는 현재 등록된 이미지 중 첫 번째 URL을 사용.' },
       },
       required: ['prompt', 'imageUrl'],
+    },
+  },
+  {
+    name: 'register_image',
+    description: '생성하거나 수정한 이미지를 식물의 대표사진 목록에 등록합니다. 사용자가 "등록해줘", "저장해줘", "사진 추가해줘", "이 사진 써줘" 등을 요청할 때 사용합니다. 이미지를 먼저 생성/수정하지 않고 등록만 요청할 경우에도 사용합니다.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        imageUrl: { type: 'string', description: '등록할 이미지 URL. 직전에 생성/수정된 이미지 URL(lastGeneratedImageUrl)을 우선 사용. 없으면 현재 등록된 이미지 중 첫 번째를 사용.' },
+      },
+      required: ['imageUrl'],
     },
   },
 ]
@@ -78,11 +89,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 503, statusMessage: 'ANTHROPIC_API_KEY가 설정되지 않았습니다. .env에 추가해주세요.' })
   }
 
-  const { messages, formState, imageUrl, imageUrls } = await readBody(event) as {
+  const { messages, formState, imageUrl, imageUrls, lastGeneratedImageUrl } = await readBody(event) as {
     messages: ChatMessage[]
     formState: FormState
     imageUrl?: string
     imageUrls?: string[]
+    lastGeneratedImageUrl?: string
   }
 
   const client = new Anthropic({ apiKey })
@@ -90,6 +102,10 @@ export default defineEventHandler(async (event) => {
   const currentImages = imageUrls && imageUrls.length > 0
     ? `\n현재 등록된 이미지 URL (${imageUrls.length}장):\n${imageUrls.map((u, i) => `  ${i + 1}. ${u}`).join('\n')}`
     : '\n현재 등록된 이미지: 없음'
+
+  const lastGenInfo = lastGeneratedImageUrl
+    ? `\n\n⚡ 직전에 생성/수정된 이미지 URL (register_image, edit_image에서 우선 사용):\n  ${lastGeneratedImageUrl}`
+    : ''
 
   const systemPrompt = `당신은 식물 가게 관리자를 돕는 AI 어시스턴트입니다. 식물 등록/수정 폼 작성을 도와줍니다.
 
@@ -101,15 +117,16 @@ export default defineEventHandler(async (event) => {
 - 상세설명: ${formState.description || '(비어있음)'}
 - 키우는방법: ${formState.care_guide || '(비어있음)'}
 - 주의사항: ${formState.caution || '(비어있음)'}
-${currentImages}
+${currentImages}${lastGenInfo}
 
 역할:
 - 식물 사진을 분석해서 정보를 자동으로 채워주세요 (fill_fields 도구 사용)
-- 새 이미지 생성 요청 → generate_image 도구 사용
+- 새 이미지 생성 요청 → generate_image 도구 사용. 생성 후 "등록하시겠어요?" 라고 묻지 말고, 이미지를 보여주는 것으로 충분합니다 (채팅 UI에 [등록하기] 버튼이 자동 표시됩니다)
 - 기존 이미지 수정 요청(배경 변경, 이모티콘 변환, 색상 변경 등) → edit_image 도구 사용
-  - 사용자가 URL을 지정하지 않으면 위 "현재 등록된 이미지" 중 첫 번째 URL을 imageUrl로 사용하세요
-  - 사용자가 이미지를 직접 첨부했으면 그 URL을 사용하세요
+  - imageUrl 우선순위: lastGeneratedImageUrl > 사용자 첨부 이미지 > 현재 등록된 이미지 첫 번째
   - URL을 사용자에게 다시 물어보지 마세요
+- 이미지 등록/저장 요청("등록해줘", "저장해줘", "사진 추가해줘") → register_image 도구 사용
+  - imageUrl: lastGeneratedImageUrl을 우선 사용, 없으면 현재 등록된 이미지 첫 번째 URL
 - 페이지 배경색·배경이미지·폰트 변경 요청 → style_page 도구 사용
 - 기존 텍스트 내용 수정, 이모티콘 삽입 요청 → fill_fields 도구 사용 (텍스트에 이모티콘 자연스럽게 포함 가능)
 - 한국어로 친근하게 대화하세요
@@ -150,7 +167,7 @@ ${currentImages}
   // 응답 파싱
   let replyText = ''
   const actions: Array<{
-    type: 'fill_fields' | 'generate_image' | 'edit_image' | 'style_page'
+    type: 'fill_fields' | 'generate_image' | 'edit_image' | 'style_page' | 'register_image'
     fields?: Record<string, unknown>
     prompt?: string
     imageUrl?: string
@@ -172,6 +189,9 @@ ${currentImages}
       } else if (block.name === 'style_page') {
         const input = block.input as { bg_color?: string; bg_image_url?: string; font?: string }
         actions.push({ type: 'style_page', style: input })
+      } else if (block.name === 'register_image') {
+        const input = block.input as { imageUrl: string }
+        actions.push({ type: 'register_image', imageUrl: input.imageUrl })
       }
     }
   }
@@ -181,6 +201,7 @@ ${currentImages}
     if (actions.some(a => a.type === 'generate_image')) replyText = (replyText ? replyText + ' ' : '') + '이미지를 생성할게요!'
     if (actions.some(a => a.type === 'edit_image')) replyText = (replyText ? replyText + ' ' : '') + '이미지를 수정할게요!'
     if (actions.some(a => a.type === 'style_page')) replyText = (replyText ? replyText + ' ' : '') + '페이지 스타일을 변경할게요!'
+    if (actions.some(a => a.type === 'register_image')) replyText = (replyText ? replyText + ' ' : '') + '이미지를 등록할게요!'
   }
 
   return { reply: replyText, actions }

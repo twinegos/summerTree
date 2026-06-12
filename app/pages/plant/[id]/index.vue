@@ -128,7 +128,7 @@ onMounted(load)
             :src="url"
             :alt="`${plant.name} ${i + 1}`"
             class="shrink-0 snap-center object-cover"
-            style="width: 100%; height: 672px;"
+            :style="{ width: '100%', height: '672px', objectPosition: plant.image_position || '50% 50%' }"
           />
         </div>
         <div v-else class="h-full flex items-center justify-center">

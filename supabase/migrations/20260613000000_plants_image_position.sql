@@ -1,0 +1,2 @@
+ALTER TABLE plants
+  ADD COLUMN IF NOT EXISTS image_position text NOT NULL DEFAULT '50% 50%';

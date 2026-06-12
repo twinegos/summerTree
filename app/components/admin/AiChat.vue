@@ -4,6 +4,7 @@ interface ChatMessage {
   content: string
   imageUrl?: string
   isLoading?: boolean
+  registerUrl?: string
 }
 
 interface FillFieldsAction {
@@ -27,6 +28,7 @@ interface Props {
     caution: string
   }
   imageUrls?: string[]
+  plantId?: string
 }
 
 const props = defineProps<Props>()
@@ -40,6 +42,7 @@ const emit = defineEmits<{
   'fill-fields': [fields: FillFieldsAction]
   'generate-image': [imageUrl: string]
   'style-page': [style: StylePageAction]
+  'register-image': [imageUrl: string]
 }>()
 
 const messages = ref<ChatMessage[]>([
@@ -53,6 +56,7 @@ const attachedImageUrl = ref('')
 const showImageInput = ref(false)
 const isLoading = ref(false)
 const messagesEl = ref<HTMLElement | null>(null)
+const lastGeneratedImageUrl = ref('')
 
 async function scrollToBottom() {
   await nextTick()
@@ -90,7 +94,7 @@ async function send() {
     const res = await $fetch<{
       reply: string
       actions: Array<{
-        type: 'fill_fields' | 'generate_image' | 'edit_image' | 'style_page'
+        type: 'fill_fields' | 'generate_image' | 'edit_image' | 'style_page' | 'register_image'
         fields?: FillFieldsAction
         prompt?: string
         imageUrl?: string
@@ -103,6 +107,7 @@ async function send() {
         formState: props.formState,
         imageUrl: imageUrlToSend || undefined,
         imageUrls: props.imageUrls ?? [],
+        lastGeneratedImageUrl: lastGeneratedImageUrl.value || undefined,
       },
     })
 
@@ -129,7 +134,8 @@ async function send() {
             body: { prompt: action.prompt },
           })
           messages.value.pop()
-          messages.value.push({ role: 'system', content: '이미지가 생성되었어요!', imageUrl: genRes.imageUrl })
+          lastGeneratedImageUrl.value = genRes.imageUrl
+          messages.value.push({ role: 'system', content: '이미지가 생성되었어요!', imageUrl: genRes.imageUrl, registerUrl: genRes.imageUrl })
           emit('generate-image', genRes.imageUrl)
         } catch (genErr: unknown) {
           messages.value.pop()
@@ -153,7 +159,8 @@ async function send() {
             body: { imageUrl: action.imageUrl, prompt: action.prompt },
           })
           messages.value.pop()
-          messages.value.push({ role: 'system', content: '이미지 수정이 완료됐어요!', imageUrl: editRes.imageUrl })
+          lastGeneratedImageUrl.value = editRes.imageUrl
+          messages.value.push({ role: 'system', content: '이미지 수정이 완료됐어요!', imageUrl: editRes.imageUrl, registerUrl: editRes.imageUrl })
           emit('generate-image', editRes.imageUrl)
         } catch (editErr: unknown) {
           messages.value.pop()
@@ -170,6 +177,9 @@ async function send() {
           if (action.style.font) parts.push(`폰트 ${action.style.font}`)
           replyText = `페이지 스타일을 변경했어요! (${parts.join(', ')})`
         }
+      } else if (action.type === 'register_image' && action.imageUrl) {
+        emit('register-image', action.imageUrl)
+        replyText = replyText || '이미지를 대표사진으로 등록했어요! 저장 버튼을 누르면 반영됩니다.'
       }
     }
 
@@ -245,9 +255,17 @@ function handleEnter(e: KeyboardEvent) {
               {{ msg.content }}
             </div>
             <template v-else>
-              <div v-if="msg.imageUrl" class="space-y-1">
+              <div v-if="msg.imageUrl" class="space-y-2">
                 <img :src="msg.imageUrl" class="w-32 h-32 object-cover rounded-xl border border-gray-200" />
                 <p class="text-xs text-gray-500">{{ msg.content }}</p>
+                <button
+                  v-if="msg.registerUrl && plantId"
+                  type="button"
+                  @click="emit('register-image', msg.registerUrl!)"
+                  class="text-xs px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+                >
+                  대표사진으로 등록
+                </button>
               </div>
               <p v-else class="text-xs text-gray-500 px-1">{{ msg.content }}</p>
             </template>
