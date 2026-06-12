@@ -234,6 +234,7 @@ onMounted(async () => {
         <div class="mb-6">
           <AdminAiChat
             :form-state="chatFormState"
+            :image-urls="[...existingImageUrls, ...newUploadedUrls]"
             @fill-fields="handleAiFillFields"
             @generate-image="handleAiGenerateImage"
             @style-page="handleAiStylePage"

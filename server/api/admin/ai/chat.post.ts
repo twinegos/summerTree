@@ -78,15 +78,20 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 503, statusMessage: 'ANTHROPIC_API_KEY가 설정되지 않았습니다. .env에 추가해주세요.' })
   }
 
-  const { messages, formState, imageUrl } = await readBody(event) as {
+  const { messages, formState, imageUrl, imageUrls } = await readBody(event) as {
     messages: ChatMessage[]
     formState: FormState
     imageUrl?: string
+    imageUrls?: string[]
   }
 
   const client = new Anthropic({ apiKey })
 
-  const systemPrompt = `당신은 식물 가게 관리자를 돕는 AI 어시스턴트입니다. 식물 등록 폼 작성을 도와줍니다.
+  const currentImages = imageUrls && imageUrls.length > 0
+    ? `\n현재 등록된 이미지 URL (${imageUrls.length}장):\n${imageUrls.map((u, i) => `  ${i + 1}. ${u}`).join('\n')}`
+    : '\n현재 등록된 이미지: 없음'
+
+  const systemPrompt = `당신은 식물 가게 관리자를 돕는 AI 어시스턴트입니다. 식물 등록/수정 폼 작성을 도와줍니다.
 
 현재 폼 상태:
 - 이름: ${formState.name || '(비어있음)'}
@@ -96,11 +101,15 @@ export default defineEventHandler(async (event) => {
 - 상세설명: ${formState.description || '(비어있음)'}
 - 키우는방법: ${formState.care_guide || '(비어있음)'}
 - 주의사항: ${formState.caution || '(비어있음)'}
+${currentImages}
 
 역할:
 - 식물 사진을 분석해서 정보를 자동으로 채워주세요 (fill_fields 도구 사용)
 - 새 이미지 생성 요청 → generate_image 도구 사용
-- 기존 이미지 수정 요청(배경 변경, 이모티콘 변환, 색상 변경 등) → edit_image 도구 사용. imageUrl은 사용자가 첨부한 이미지 URL을 그대로 전달하세요.
+- 기존 이미지 수정 요청(배경 변경, 이모티콘 변환, 색상 변경 등) → edit_image 도구 사용
+  - 사용자가 URL을 지정하지 않으면 위 "현재 등록된 이미지" 중 첫 번째 URL을 imageUrl로 사용하세요
+  - 사용자가 이미지를 직접 첨부했으면 그 URL을 사용하세요
+  - URL을 사용자에게 다시 물어보지 마세요
 - 페이지 배경색·배경이미지·폰트 변경 요청 → style_page 도구 사용
 - 기존 텍스트 내용 수정, 이모티콘 삽입 요청 → fill_fields 도구 사용 (텍스트에 이모티콘 자연스럽게 포함 가능)
 - 한국어로 친근하게 대화하세요

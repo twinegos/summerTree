@@ -26,6 +26,7 @@ interface Props {
     care_guide: string
     caution: string
   }
+  imageUrls?: string[]
 }
 
 const props = defineProps<Props>()
@@ -101,6 +102,7 @@ async function send() {
         messages: [...history, { role: 'user', content: userMsg.content }],
         formState: props.formState,
         imageUrl: imageUrlToSend || undefined,
+        imageUrls: props.imageUrls ?? [],
       },
     })
 
