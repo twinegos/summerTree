@@ -174,17 +174,22 @@ function reset() {
   emitValue(50, 50, 1.0)
 }
 
-const imageStyle = computed(() => ({
-  position: 'absolute' as const,
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover' as const,
-  objectPosition: `${props.modelValue.x}% ${props.modelValue.y}%`,
-  transformOrigin: `${props.modelValue.x}% ${props.modelValue.y}%`,
-  transform: `scale(${props.modelValue.scale})`,
-  pointerEvents: 'none' as const,
-  userSelect: 'none' as const,
-}))
+const imageStyle = computed(() => {
+  const { x, y, scale } = props.modelValue
+  const zoomedOut = scale < 1
+  return {
+    position: 'absolute' as const,
+    width: '100%',
+    height: '100%',
+    // scale<1: 전체 이미지 표시(contain), scale>=1: 프레임 채움(cover)
+    objectFit: (zoomedOut ? 'contain' : 'cover') as 'contain' | 'cover',
+    objectPosition: zoomedOut ? '50% 50%' : `${x}% ${y}%`,
+    transformOrigin: `${x}% ${y}%`,
+    transform: `scale(${scale})`,
+    pointerEvents: 'none' as const,
+    userSelect: 'none' as const,
+  }
+})
 </script>
 
 <template>

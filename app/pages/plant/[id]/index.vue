@@ -25,12 +25,13 @@ const heroImageStyle = computed(() => {
   if (!plant.value) return {}
   const pos = plant.value.image_position ?? '50% 50%'
   const s = plant.value.image_scale ?? 1
+  const zoomedOut = s < 1
   return {
     position: 'absolute' as const,
     width: '100%',
     height: '100%',
-    objectFit: 'cover' as const,
-    objectPosition: pos,
+    objectFit: (zoomedOut ? 'contain' : 'cover') as 'contain' | 'cover',
+    objectPosition: zoomedOut ? '50% 50%' : pos,
     transformOrigin: pos,
     transform: `scale(${s})`,
   }
