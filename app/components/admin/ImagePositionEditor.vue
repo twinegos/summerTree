@@ -112,10 +112,12 @@ function onPointerMove(e: PointerEvent) {
         s
       )
     } else {
-      // scale < 1: 이미지 위치 이동 — drag right → 이미지 오른쪽 이동 → x 증가
+      // scale < 1: 이미지 위치 이동 — 1px 드래그 = 1px 이미지 이동 (1:1 매핑)
+      // transform-origin 변화량을 container 크기 기준으로 보정
+      const factor = Math.max(1 - s, 0.05)
       emitValue(
-        dragStartCx + (dx / W) * 100,
-        dragStartCy + (dy / H) * 100,
+        dragStartCx + (dx / W) * 100 / factor,
+        dragStartCy + (dy / H) * 100 / factor,
         s
       )
     }

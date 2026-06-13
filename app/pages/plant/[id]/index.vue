@@ -127,8 +127,8 @@ onMounted(load)
         <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
       </div>
 
-      <!-- 이미지 + 오버랩 텍스트 -->
-      <div class="relative overflow-hidden" style="background: var(--bg-light); height: 672px;">
+      <!-- 이미지 + 오버랩 텍스트 (에디터와 동일 9:16 비율) -->
+      <div class="relative overflow-hidden" style="background: var(--bg-light); aspect-ratio: 9/16; max-height: 672px; width: 100%;">
         <!-- 이미지 갤러리 -->
         <div
           v-if="plant.image_urls.length > 0"
@@ -141,7 +141,7 @@ onMounted(load)
             v-for="(url, i) in plant.image_urls"
             :key="i"
             class="relative shrink-0 snap-center overflow-hidden"
-            style="width: 100%; height: 672px; flex-shrink: 0;"
+            style="width: 100%; height: 100%; flex-shrink: 0;"
           >
             <img
               :src="url"
