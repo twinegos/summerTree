@@ -14,22 +14,17 @@ const formattedPrice = computed(() =>
   props.plant.price.toLocaleString('ko-KR') + '원'
 )
 
-function parsePosStr(pos: string | null | undefined) {
-  const parts = (pos || '50% 50%').split(' ')
-  return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 }
-}
-
 const thumbnailStyle = computed(() => {
-  const { x, y } = parsePosStr(props.plant.image_position)
+  const pos = props.plant.image_position ?? '50% 50%'
   const s = props.plant.image_scale ?? 1
   return {
     position: 'absolute' as const,
-    width: `${s * 100}%`,
-    height: `${s * 100}%`,
-    left: `${x}%`,
-    top: `${y}%`,
-    transform: 'translate(-50%, -50%)',
+    width: '100%',
+    height: '100%',
     objectFit: 'cover' as const,
+    objectPosition: pos,
+    transformOrigin: pos,
+    transform: `scale(${s})`,
   }
 })
 </script>

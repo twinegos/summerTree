@@ -21,23 +21,18 @@ const formattedPrice = computed(() =>
 const isOutOfStock = computed(() => (plant.value?.stock ?? 0) === 0)
 const categoryName = computed(() => plant.value?.categories?.name ?? '')
 
-function parsePosStr(pos: string | null | undefined) {
-  const parts = (pos || '50% 50%').split(' ')
-  return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 }
-}
-
 const heroImageStyle = computed(() => {
   if (!plant.value) return {}
-  const { x, y } = parsePosStr(plant.value.image_position)
+  const pos = plant.value.image_position ?? '50% 50%'
   const s = plant.value.image_scale ?? 1
   return {
     position: 'absolute' as const,
-    width: `${s * 100}%`,
-    height: `${s * 100}%`,
-    left: `${x}%`,
-    top: `${y}%`,
-    transform: 'translate(-50%, -50%)',
+    width: '100%',
+    height: '100%',
     objectFit: 'cover' as const,
+    objectPosition: pos,
+    transformOrigin: pos,
+    transform: `scale(${s})`,
   }
 })
 

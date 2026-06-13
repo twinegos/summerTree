@@ -96,19 +96,21 @@ function onPointerMove(e: PointerEvent) {
   const H = containerRef.value.offsetHeight
 
   if (activePointers.size >= 2) {
-    // 핀치: 스케일 조절
     const dist = pinchDist()
     if (pinchStartDist > 0) {
-      const newScale = clamp(pinchStartScale * (dist / pinchStartDist), 1.0, 5.0)
-      emitValue(props.modelValue.x, props.modelValue.y, newScale)
+      emitValue(props.modelValue.x, props.modelValue.y, pinchStartScale * dist / pinchStartDist)
     }
   } else if (activePointers.size === 1 && isDragging.value) {
-    // 단일 포인터: 이미지 이동 (손가락/마우스 방향 = 이미지 이동 방향)
     const dx = e.clientX - dragStartX
     const dy = e.clientY - dragStartY
-    const dxPct = (dx / W) * 100
-    const dyPct = (dy / H) * 100
-    emitValue(dragStartCx + dxPct, dragStartCy + dyPct, props.modelValue.scale)
+    const s = props.modelValue.scale
+    // drag right → 이미지 오른쪽 이동 → 왼쪽 영역 보임 → x 감소
+    const sensitivity = Math.max(s, 1)
+    emitValue(
+      dragStartCx - (dx / W) * 100 / sensitivity,
+      dragStartCy - (dy / H) * 100 / sensitivity,
+      s
+    )
   }
 }
 
@@ -164,12 +166,12 @@ function reset() {
 
 const imageStyle = computed(() => ({
   position: 'absolute' as const,
-  width: `${props.modelValue.scale * 100}%`,
-  height: `${props.modelValue.scale * 100}%`,
-  left: `${props.modelValue.x}%`,
-  top: `${props.modelValue.y}%`,
-  transform: 'translate(-50%, -50%)',
+  width: '100%',
+  height: '100%',
   objectFit: 'cover' as const,
+  objectPosition: `${props.modelValue.x}% ${props.modelValue.y}%`,
+  transformOrigin: `${props.modelValue.x}% ${props.modelValue.y}%`,
+  transform: `scale(${props.modelValue.scale})`,
   pointerEvents: 'none' as const,
   userSelect: 'none' as const,
 }))
@@ -181,7 +183,7 @@ const imageStyle = computed(() => ({
     <div
       ref="containerRef"
       class="relative overflow-hidden rounded-xl border-2 border-dashed select-none w-full"
-      style="aspect-ratio: 9/16; max-height: 360px; border-color: #86efac; touch-action: none;"
+      style="aspect-ratio: 9/16; max-height: 360px; border-color: #86efac; touch-action: none; background: #f0f0f0;"
       :style="{ cursor: isDragging ? 'grabbing' : 'grab' }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
