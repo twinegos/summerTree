@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
 interface EditorValue {
-  x: number   // translate X as % of container (0 = center, negative = left, positive = right)
-  y: number   // translate Y as % of container (0 = center, negative = up, positive = down)
+  x: number   // translate X as % of container (0 = center)
+  y: number   // translate Y as % of container (0 = center)
   scale: number
 }
 
@@ -100,9 +100,8 @@ function onWheel(e: WheelEvent) {
   emitValue(props.modelValue.x, props.modelValue.y, props.modelValue.scale - e.deltaY / 400)
 }
 
-// PC corner handle: drag away from corner = grow
-// top corners: drag UP (dy < 0) = grow → sign = -1
-// bottom corners: drag DOWN (dy > 0) = grow → sign = +1
+// top corners: drag UP (dy<0) = grow → sign -1
+// bottom corners: drag DOWN (dy>0) = grow → sign +1
 const cornerHandles = [
   { top: '4px', left: '4px', cursor: 'nwse-resize', sign: -1 },
   { top: '4px', right: '4px', cursor: 'nesw-resize', sign: -1 },
@@ -156,6 +155,10 @@ const imageStyle = computed(() => {
 
 <template>
   <div class="space-y-2">
+    <!--
+      9:16 비율 에디터 — 상세페이지와 동일한 비율
+      하단 28% 오버레이 영역은 상세페이지 텍스트가 덮는 영역 프리뷰
+    -->
     <div
       ref="containerRef"
       class="relative overflow-hidden rounded-xl border-2 border-dashed select-none w-full"
@@ -169,32 +172,60 @@ const imageStyle = computed(() => {
       @mouseenter="isHovered = true"
       @mouseleave="isHovered = false"
     >
+      <!-- 이미지 -->
       <img
         :src="imageUrl"
         draggable="false"
         :style="imageStyle"
       />
 
+      <!-- 상단: 배율 + 조작 힌트 -->
+      <div class="absolute top-2 left-2 right-2 flex justify-between items-start pointer-events-none z-20">
+        <span class="text-[9px] text-white/90 bg-black/40 px-1.5 py-0.5 rounded leading-tight">
+          {{ isTouchDevice ? '한 손가락 이동 · 두 손가락 확대' : '드래그 이동 · 스크롤/핸들 확대' }}
+        </span>
+        <span class="text-[10px] text-white font-semibold bg-black/40 px-1.5 py-0.5 rounded">
+          {{ modelValue.scale.toFixed(2) }}×
+        </span>
+      </div>
+
+      <!-- 하단: 상세페이지 오버레이 프리뷰 (비율·색상 동일하게 구도 확인용) -->
+      <div
+        class="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
+        style="background: rgba(232, 234, 216, 0.75); height: 28%;"
+      >
+        <div class="px-3 pt-4 pb-2 space-y-1.5">
+          <!-- 카테고리 라인 -->
+          <div class="h-1.5 rounded opacity-40" style="width: 28%; background: #1c1a14;"></div>
+          <!-- 식물 이름 (굵고 넓게) -->
+          <div class="h-3 rounded opacity-55" style="width: 68%; background: #1c1a14;"></div>
+          <!-- 짧은 설명 -->
+          <div class="space-y-1">
+            <div class="h-1.5 rounded opacity-28" style="width: 95%; background: #1c1a14;"></div>
+            <div class="h-1.5 rounded opacity-28" style="width: 72%; background: #1c1a14;"></div>
+          </div>
+          <!-- 관리 난이도 -->
+          <div class="flex items-center gap-1.5 pt-0.5">
+            <div class="h-1.5 rounded opacity-30" style="width: 22%; background: #1c1a14;"></div>
+            <div class="flex gap-0.5">
+              <div class="w-1.5 h-1.5 rounded-full" style="background: rgba(28,26,20,0.45);"></div>
+              <div class="w-1.5 h-1.5 rounded-full" style="background: rgba(28,26,20,0.45);"></div>
+              <div class="w-1.5 h-1.5 rounded-full" style="background: rgba(28,26,20,0.20);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- PC 전용: hover 시 4모서리 스케일 핸들 -->
       <template v-if="!isTouchDevice && isHovered">
         <div
           v-for="(h, i) in cornerHandles"
           :key="i"
-          class="absolute z-10 w-4 h-4 bg-white border-2 border-green-500 rounded-sm"
-          :style="{ top: h.top, left: (h as any).left, right: (h as any).right, bottom: (h as any).bottom, cursor: h.cursor }"
+          class="absolute z-30 w-4 h-4 bg-white border-2 border-green-500 rounded-sm"
+          :style="{ top: (h as any).top, left: (h as any).left, right: (h as any).right, bottom: (h as any).bottom, cursor: h.cursor }"
           @pointerdown="(e) => onHandlePointerDown(e, h.sign)"
         />
       </template>
-
-      <!-- 힌트 + 배율 표시 -->
-      <div class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none">
-        <span class="text-[10px] text-white/90 bg-black/40 px-1.5 py-0.5 rounded leading-tight">
-          {{ isTouchDevice ? '한 손가락 이동 · 두 손가락 확대' : '드래그 이동 · 스크롤/모서리 확대' }}
-        </span>
-        <span class="text-[11px] text-white font-semibold bg-black/40 px-1.5 py-0.5 rounded">
-          {{ modelValue.scale.toFixed(2) }}×
-        </span>
-      </div>
     </div>
 
     <!-- 배율 슬라이더 -->

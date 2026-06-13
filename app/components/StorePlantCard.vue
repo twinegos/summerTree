@@ -39,8 +39,8 @@ const thumbnailStyle = computed(() => {
   >
     <!-- 이미지 -->
     <div
-      class="relative aspect-square overflow-hidden mb-2.5"
-      style="background: var(--bg-light); border-radius: 4px;"
+      class="relative overflow-hidden mb-2.5"
+      style="aspect-ratio: 9/16; background: var(--bg-light); border-radius: 4px;"
     >
       <img
         v-if="thumbnailUrl"
