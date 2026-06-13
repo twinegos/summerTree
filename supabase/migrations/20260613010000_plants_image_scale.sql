@@ -1,0 +1,2 @@
+ALTER TABLE plants
+  ADD COLUMN IF NOT EXISTS image_scale numeric NOT NULL DEFAULT 1.0;

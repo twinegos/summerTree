@@ -28,6 +28,7 @@ const form = reactive({
   page_bg_image: '' as string,
   page_font: 'sans' as 'sans' | 'serif' | 'mono',
   image_position: '50% 50%' as string,
+  image_scale: 1.0 as number,
 })
 
 const existingImageUrls = ref<string[]>([])
@@ -43,6 +44,22 @@ const errors = reactive({
   category_id: '',
   price: '',
   stock: '',
+})
+
+function parseImagePosition(pos: string): { x: number; y: number } {
+  const parts = (pos || '50% 50%').split(' ')
+  return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 }
+}
+
+const imageEditorValue = computed({
+  get() {
+    const { x, y } = parseImagePosition(form.image_position)
+    return { x, y, scale: form.image_scale }
+  },
+  set(val: { x: number; y: number; scale: number }) {
+    form.image_position = `${val.x.toFixed(1)}% ${val.y.toFixed(1)}%`
+    form.image_scale = val.scale
+  },
 })
 
 const chatFormState = computed(() => ({
@@ -169,6 +186,7 @@ async function handleSubmit() {
       page_bg_image: form.page_bg_image.trim() || null,
       page_font: form.page_font,
       image_position: form.image_position,
+      image_scale: form.image_scale,
       image_urls: allImageUrls,
     }
 
@@ -215,6 +233,7 @@ onMounted(async () => {
   form.page_bg_image = plant.page_bg_image ?? ''
   form.page_font = (plant.page_font as 'sans' | 'serif' | 'mono') ?? 'sans'
   form.image_position = plant.image_position ?? '50% 50%'
+  form.image_scale = plant.image_scale ?? 1.0
   existingImageUrls.value = [...plant.image_urls]
 
   isLoading.value = false
@@ -385,38 +404,19 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- 이미지 위치 조절 -->
+        <!-- 이미지 위치/크기 조절 -->
         <div class="rounded-xl border border-gray-200 p-4 space-y-3">
-          <p class="text-sm font-semibold text-gray-700">이미지 위치</p>
-          <p class="text-xs text-gray-400">상세 페이지 hero 및 썸네일에 적용됩니다</p>
-          <!-- 3×3 그리드 프리셋 -->
-          <div class="grid grid-cols-3 gap-1.5 w-36">
-            <button
-              v-for="pos in [
-                { label: '↖', value: '0% 0%' }, { label: '↑', value: '50% 0%' }, { label: '↗', value: '100% 0%' },
-                { label: '←', value: '0% 50%' }, { label: '·', value: '50% 50%' }, { label: '→', value: '100% 50%' },
-                { label: '↙', value: '0% 100%' }, { label: '↓', value: '50% 100%' }, { label: '↘', value: '100% 100%' },
-              ]"
-              :key="pos.value"
-              type="button"
-              @click="form.image_position = pos.value"
-              class="aspect-square rounded-lg text-sm font-medium transition-colors flex items-center justify-center border"
-              :class="form.image_position === pos.value
-                ? 'bg-green-600 text-white border-green-600'
-                : 'bg-white text-gray-500 border-gray-200 hover:border-green-400'"
-            >{{ pos.label }}</button>
+          <div>
+            <p class="text-sm font-semibold text-gray-700">이미지 위치 · 크기</p>
+            <p class="text-xs text-gray-400 mt-0.5">상세 페이지 hero 및 식물 목록 썸네일에 적용됩니다</p>
           </div>
-          <!-- 이미지 미리보기 with position -->
-          <div
-            v-if="existingImageUrls.length > 0 || newUploadedUrls.length > 0"
-            class="w-full h-28 rounded-lg overflow-hidden border border-gray-200"
-          >
-            <img
-              :src="existingImageUrls[0] || newUploadedUrls[0]"
-              class="w-full h-full object-cover"
-              :style="{ objectPosition: form.image_position }"
+          <div v-if="existingImageUrls.length > 0 || newUploadedUrls.length > 0">
+            <AdminImagePositionEditor
+              v-model="imageEditorValue"
+              :image-url="existingImageUrls[0] || newUploadedUrls[0]"
             />
           </div>
+          <p v-else class="text-xs text-gray-400 py-2">이미지를 먼저 등록해주세요</p>
         </div>
 
         <!-- 페이지 스타일 -->

@@ -30,8 +30,12 @@ const formattedPrice = computed(() =>
         v-if="thumbnailUrl"
         :src="thumbnailUrl"
         :alt="plant.name"
-        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        :style="{ objectPosition: plant.image_position || '50% 50%' }"
+        class="w-full h-full object-cover transition-[transform] duration-500"
+        :style="{
+          objectPosition: plant.image_position || '50% 50%',
+          transform: `scale(${plant.image_scale ?? 1})`,
+          transformOrigin: plant.image_position || '50% 50%',
+        }"
       />
       <div v-else class="w-full h-full flex items-center justify-center">
         <svg class="w-8 h-8" style="color: var(--border);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
