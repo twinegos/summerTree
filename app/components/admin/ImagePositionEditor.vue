@@ -77,21 +77,11 @@ function onPointerMove(e: PointerEvent) {
     }
   } else if (activePointers.size === 1 && isDragging.value) {
     const s = props.modelValue.scale
-    if (s >= 1) {
-      // cover mode pan: drag right → image shifts left → reveal right side
-      emitValue(
-        props.modelValue.x - (dx / W) * 100,
-        props.modelValue.y - (dy / H) * 100,
-        s
-      )
-    } else {
-      // contain mode: image follows finger/cursor
-      emitValue(
-        props.modelValue.x + (dx / W) * 100,
-        props.modelValue.y + (dy / H) * 100,
-        s
-      )
-    }
+    emitValue(
+      props.modelValue.x + (dx / W) * 100,
+      props.modelValue.y + (dy / H) * 100,
+      s
+    )
   }
 }
 
