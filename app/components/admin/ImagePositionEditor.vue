@@ -104,13 +104,21 @@ function onPointerMove(e: PointerEvent) {
     const dx = e.clientX - dragStartX
     const dy = e.clientY - dragStartY
     const s = props.modelValue.scale
-    // drag right → 이미지 오른쪽 이동 → 왼쪽 영역 보임 → x 감소
-    const sensitivity = Math.max(s, 1)
-    emitValue(
-      dragStartCx - (dx / W) * 100 / sensitivity,
-      dragStartCy - (dy / H) * 100 / sensitivity,
-      s
-    )
+    if (s >= 1) {
+      // scale ≥ 1: 패닝 — drag right → 왼쪽 영역 노출 → x 감소
+      emitValue(
+        dragStartCx - (dx / W) * 100 / s,
+        dragStartCy - (dy / H) * 100 / s,
+        s
+      )
+    } else {
+      // scale < 1: 이미지 위치 이동 — drag right → 이미지 오른쪽 이동 → x 증가
+      emitValue(
+        dragStartCx + (dx / W) * 100,
+        dragStartCy + (dy / H) * 100,
+        s
+      )
+    }
   }
 }
 
