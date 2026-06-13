@@ -54,11 +54,11 @@ function parseImagePosition(pos: string): { x: number; y: number } {
 const imageEditorValue = computed({
   get() {
     const { x, y } = parseImagePosition(form.image_position)
-    return { x, y, scale: Math.max(1.0, form.image_scale) }
+    return { x, y, scale: form.image_scale }
   },
   set(val: { x: number; y: number; scale: number }) {
     form.image_position = `${val.x.toFixed(2)}% ${val.y.toFixed(2)}%`
-    form.image_scale = Math.max(1.0, val.scale)
+    form.image_scale = val.scale
   },
 })
 

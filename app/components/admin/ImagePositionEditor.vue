@@ -50,25 +50,11 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v))
 }
 
-// scale에 따른 중심점 허용 범위 계산
-// 이미지(scale*100% 크기)의 중심이 너무 치우치면 컨테이너 가장자리가 노출됨
-function limits(scale: number) {
-  const half = 50 / scale   // 이미지 반너비/반높이를 컨테이너 % 단위로 환산
-  return {
-    xMin: clamp(50 - (50 - half * scale), 0, 50),  // = 100 - scale*50 (단, min 0)
-    xMax: clamp(scale * 50, 50, 100),
-    yMin: clamp(100 - scale * 50, 0, 50),
-    yMax: clamp(scale * 50, 50, 100),
-  }
-}
-
 function emitValue(x: number, y: number, scale: number) {
-  const s = clamp(scale, 1.0, 5.0)
-  const lim = limits(s)
   emit('update:modelValue', {
-    x: clamp(x, lim.xMin, lim.xMax),
-    y: clamp(y, lim.yMin, lim.yMax),
-    scale: s,
+    x: clamp(x, 0, 100),
+    y: clamp(y, 0, 100),
+    scale: clamp(scale, 0.1, 5.0),
   })
 }
 
@@ -249,10 +235,10 @@ const imageStyle = computed(() => ({
 
     <!-- 배율 슬라이더 -->
     <div class="flex items-center gap-2 px-0.5">
-      <span class="text-xs text-gray-400 shrink-0">1×</span>
+      <span class="text-xs text-gray-400 shrink-0">0.1×</span>
       <input
         type="range"
-        min="1"
+        min="0.1"
         max="5"
         step="0.05"
         :value="modelValue.scale"
