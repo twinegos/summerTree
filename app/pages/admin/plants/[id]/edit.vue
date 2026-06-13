@@ -27,7 +27,7 @@ const form = reactive({
   page_bg_color: '' as string,
   page_bg_image: '' as string,
   page_font: 'sans' as 'sans' | 'serif' | 'mono',
-  image_position: '50% 50%' as string,
+  image_position: '0% 0%' as string,
   image_scale: 1.0 as number,
 })
 
@@ -47,8 +47,8 @@ const errors = reactive({
 })
 
 function parseImagePosition(pos: string): { x: number; y: number } {
-  const parts = (pos || '50% 50%').split(' ')
-  return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 }
+  const parts = (pos || '0% 0%').split(' ')
+  return { x: parseFloat(parts[0]) || 0, y: parseFloat(parts[1]) || 0 }
 }
 
 const imageEditorValue = computed({

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 
 interface EditorValue {
-  x: number   // 0-100, 이미지 중심의 컨테이너 내 X위치
-  y: number   // 0-100, 이미지 중심의 컨테이너 내 Y위치
-  scale: number // 1.0+
+  x: number   // translate X as % of container (0 = center, negative = left, positive = right)
+  y: number   // translate Y as % of container (0 = center, negative = up, positive = down)
+  scale: number
 }
 
 const props = defineProps<{
@@ -18,8 +18,8 @@ const emit = defineEmits<{
 const containerRef = ref<HTMLElement | null>(null)
 const isDragging = ref(false)
 const isTouchDevice = ref(false)
+const isHovered = ref(false)
 
-// Pointer state
 const activePointers = new Map<number, { x: number; y: number }>()
 let pinchStartDist = 0
 let pinchStartScale = 1.0
@@ -33,14 +33,7 @@ function clamp(v: number, lo: number, hi: number) {
 }
 
 function emitValue(x: number, y: number, scale: number) {
-  const s = clamp(scale, 0.1, 5.0)
-  // scale >= 1 (cover): 이미지가 프레임을 채우므로 빈 여백 방지를 위해 0-100 클램프
-  // scale < 1 (contain): 이미지가 프레임보다 작으므로 자유롭게 배치 허용
-  emit('update:modelValue', {
-    x: s >= 1 ? clamp(x, 0, 100) : x,
-    y: s >= 1 ? clamp(y, 0, 100) : y,
-    scale: s,
-  })
+  emit('update:modelValue', { x, y, scale: clamp(scale, 0.1, 5.0) })
 }
 
 function pinchDist() {
@@ -85,16 +78,17 @@ function onPointerMove(e: PointerEvent) {
   } else if (activePointers.size === 1 && isDragging.value) {
     const s = props.modelValue.scale
     if (s >= 1) {
+      // cover mode pan: drag right → image shifts left → reveal right side
       emitValue(
-        props.modelValue.x - (dx / W) * 100 / s,
-        props.modelValue.y - (dy / H) * 100 / s,
+        props.modelValue.x - (dx / W) * 100,
+        props.modelValue.y - (dy / H) * 100,
         s
       )
     } else {
-      const factor = Math.max(1 - s, 0.05)
+      // contain mode: image follows finger/cursor
       emitValue(
-        props.modelValue.x + (dx / W) * 100 / factor,
-        props.modelValue.y + (dy / H) * 100 / factor,
+        props.modelValue.x + (dx / W) * 100,
+        props.modelValue.y + (dy / H) * 100,
         s
       )
     }
@@ -116,8 +110,17 @@ function onWheel(e: WheelEvent) {
   emitValue(props.modelValue.x, props.modelValue.y, props.modelValue.scale - e.deltaY / 400)
 }
 
-// PC 모서리 핸들: 위로 드래그 = 확대
-function onHandlePointerDown(e: PointerEvent) {
+// PC corner handle: drag away from corner = grow
+// top corners: drag UP (dy < 0) = grow → sign = -1
+// bottom corners: drag DOWN (dy > 0) = grow → sign = +1
+const cornerHandles = [
+  { top: '4px', left: '4px', cursor: 'nwse-resize', sign: -1 },
+  { top: '4px', right: '4px', cursor: 'nesw-resize', sign: -1 },
+  { bottom: '4px', left: '4px', cursor: 'nesw-resize', sign: 1 },
+  { bottom: '4px', right: '4px', cursor: 'nwse-resize', sign: 1 },
+] as const
+
+function onHandlePointerDown(e: PointerEvent, sign: number) {
   e.stopPropagation()
   e.preventDefault()
   const startY = e.clientY
@@ -126,7 +129,7 @@ function onHandlePointerDown(e: PointerEvent) {
 
   function onMove(ev: PointerEvent) {
     const dy = ev.clientY - startY
-    emitValue(props.modelValue.x, props.modelValue.y, startScale - (dy / H) * 3)
+    emitValue(props.modelValue.x, props.modelValue.y, startScale + sign * (dy / H) * 3)
   }
   function onUp() {
     document.removeEventListener('pointermove', onMove)
@@ -142,21 +145,19 @@ function onScaleSlider(e: Event) {
 }
 
 function reset() {
-  emitValue(50, 50, 1.0)
+  emitValue(0, 0, 1.0)
 }
 
 const imageStyle = computed(() => {
   const { x, y, scale } = props.modelValue
-  const zoomedOut = scale < 1
   return {
     position: 'absolute' as const,
     width: '100%',
     height: '100%',
-    // scale<1: 전체 이미지 표시(contain), scale>=1: 프레임 채움(cover)
-    objectFit: (zoomedOut ? 'contain' : 'cover') as 'contain' | 'cover',
-    objectPosition: zoomedOut ? '50% 50%' : `${x}% ${y}%`,
-    transformOrigin: `${x}% ${y}%`,
-    transform: `scale(${scale})`,
+    objectFit: (scale < 1 ? 'contain' : 'cover') as 'contain' | 'cover',
+    objectPosition: '50% 50%',
+    transformOrigin: '50% 50%',
+    transform: `translate(${x}%, ${y}%) scale(${scale})`,
     pointerEvents: 'none' as const,
     userSelect: 'none' as const,
   }
@@ -165,7 +166,6 @@ const imageStyle = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <!-- 9:16 비율 에디터 (상세페이지 hero와 동일 비율) -->
     <div
       ref="containerRef"
       class="relative overflow-hidden rounded-xl border-2 border-dashed select-none w-full"
@@ -176,6 +176,8 @@ const imageStyle = computed(() => {
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
       @wheel.prevent="onWheel"
+      @mouseenter="isHovered = true"
+      @mouseleave="isHovered = false"
     >
       <img
         :src="imageUrl"
@@ -183,31 +185,15 @@ const imageStyle = computed(() => {
         :style="imageStyle"
       />
 
-      <!-- PC 전용: 4모서리 스케일 핸들 + 초점 마커 -->
-      <template v-if="!isTouchDevice">
+      <!-- PC 전용: hover 시 4모서리 스케일 핸들 -->
+      <template v-if="!isTouchDevice && isHovered">
         <div
-          v-for="(s, i) in [
-            { top: '-5px', left: '-5px', cursor: 'nwse-resize' },
-            { top: '-5px', right: '-5px', cursor: 'nesw-resize' },
-            { bottom: '-5px', left: '-5px', cursor: 'nesw-resize' },
-            { bottom: '-5px', right: '-5px', cursor: 'nwse-resize' },
-          ]"
+          v-for="(h, i) in cornerHandles"
           :key="i"
-          class="absolute z-10 w-3.5 h-3.5 bg-white border-2 border-green-500 rounded-sm"
-          :style="{ ...s }"
-          @pointerdown="onHandlePointerDown"
+          class="absolute z-10 w-4 h-4 bg-white border-2 border-green-500 rounded-sm"
+          :style="{ top: h.top, left: (h as any).left, right: (h as any).right, bottom: (h as any).bottom, cursor: h.cursor }"
+          @pointerdown="(e) => onHandlePointerDown(e, h.sign)"
         />
-        <!-- 초점 십자선 -->
-        <div
-          class="absolute w-5 h-5 pointer-events-none z-10"
-          :style="{ left: `calc(${modelValue.x}% - 10px)`, top: `calc(${modelValue.y}% - 10px)` }"
-        >
-          <svg viewBox="0 0 20 20" fill="none" class="w-full h-full drop-shadow">
-            <line x1="10" y1="0" x2="10" y2="20" stroke="white" stroke-width="1.5" stroke-dasharray="2 2"/>
-            <line x1="0" y1="10" x2="20" y2="10" stroke="white" stroke-width="1.5" stroke-dasharray="2 2"/>
-            <circle cx="10" cy="10" r="3" fill="white" fill-opacity="0.9"/>
-          </svg>
-        </div>
       </template>
 
       <!-- 힌트 + 배율 표시 -->
