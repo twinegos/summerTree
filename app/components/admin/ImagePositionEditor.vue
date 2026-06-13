@@ -1,18 +1,4 @@
 <script setup lang="ts">
-/*
- * 이미지 위치/크기 에디터
- *
- * 데이터 모델:
- *   x, y = 컨테이너 내 이미지 중심점 (0~100%)
- *   scale = 배율 (1.0 이상, 컨테이너를 항상 채움)
- *
- * CSS 적용:
- *   position: absolute; width: scale*100%; height: scale*100%;
- *   left: x%; top: y%; transform: translate(-50%, -50%)
- *
- * 이 방식은 object-fit+transform 조합의 역방향 버그가 없고
- * scale<1에서 빈 여백이 생기는 문제도 없음
- */
 
 interface EditorValue {
   x: number   // 0-100, 이미지 중심의 컨테이너 내 X위치
@@ -35,10 +21,6 @@ const isTouchDevice = ref(false)
 
 // Pointer state
 const activePointers = new Map<number, { x: number; y: number }>()
-let dragStartX = 0
-let dragStartY = 0
-let dragStartCx = 0
-let dragStartCy = 0
 let pinchStartDist = 0
 let pinchStartScale = 1.0
 
@@ -74,22 +56,19 @@ function onPointerDown(e: PointerEvent) {
 
   if (activePointers.size === 1) {
     isDragging.value = true
-    dragStartX = e.clientX
-    dragStartY = e.clientY
-    dragStartCx = props.modelValue.x
-    dragStartCy = props.modelValue.y
   } else if (activePointers.size === 2) {
     isDragging.value = false
     pinchStartDist = pinchDist()
     pinchStartScale = props.modelValue.scale
-    // 핀치 시작 시 드래그 기준점 초기화 (손가락 줄인 후 이동 대비)
-    dragStartCx = props.modelValue.x
-    dragStartCy = props.modelValue.y
   }
 }
 
 function onPointerMove(e: PointerEvent) {
   if (!containerRef.value || !activePointers.has(e.pointerId)) return
+
+  const prev = activePointers.get(e.pointerId)!
+  const dx = e.clientX - prev.x
+  const dy = e.clientY - prev.y
   activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
 
   const W = containerRef.value.offsetWidth
@@ -101,23 +80,18 @@ function onPointerMove(e: PointerEvent) {
       emitValue(props.modelValue.x, props.modelValue.y, pinchStartScale * dist / pinchStartDist)
     }
   } else if (activePointers.size === 1 && isDragging.value) {
-    const dx = e.clientX - dragStartX
-    const dy = e.clientY - dragStartY
     const s = props.modelValue.scale
     if (s >= 1) {
-      // scale ≥ 1: 패닝 — drag right → 왼쪽 영역 노출 → x 감소
       emitValue(
-        dragStartCx - (dx / W) * 100 / s,
-        dragStartCy - (dy / H) * 100 / s,
+        props.modelValue.x - (dx / W) * 100 / s,
+        props.modelValue.y - (dy / H) * 100 / s,
         s
       )
     } else {
-      // scale < 1: 이미지 위치 이동 — 1px 드래그 = 1px 이미지 이동 (1:1 매핑)
-      // transform-origin 변화량을 container 크기 기준으로 보정
       const factor = Math.max(1 - s, 0.05)
       emitValue(
-        dragStartCx + (dx / W) * 100 / factor,
-        dragStartCy + (dy / H) * 100 / factor,
+        props.modelValue.x + (dx / W) * 100 / factor,
+        props.modelValue.y + (dy / H) * 100 / factor,
         s
       )
     }
@@ -130,12 +104,6 @@ function onPointerUp(e: PointerEvent) {
     isDragging.value = false
     pinchStartDist = 0
   } else if (activePointers.size === 1) {
-    // 손가락 하나 뗀 후 나머지 손가락으로 드래그 이어받기
-    const [, pos] = [...activePointers.entries()][0]
-    dragStartX = pos.x
-    dragStartY = pos.y
-    dragStartCx = props.modelValue.x
-    dragStartCy = props.modelValue.y
     isDragging.value = true
   }
 }
