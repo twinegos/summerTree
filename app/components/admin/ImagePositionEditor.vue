@@ -1,8 +1,23 @@
 <script setup lang="ts">
+/*
+ * 이미지 위치/크기 에디터
+ *
+ * 데이터 모델:
+ *   x, y = 컨테이너 내 이미지 중심점 (0~100%)
+ *   scale = 배율 (1.0 이상, 컨테이너를 항상 채움)
+ *
+ * CSS 적용:
+ *   position: absolute; width: scale*100%; height: scale*100%;
+ *   left: x%; top: y%; transform: translate(-50%, -50%)
+ *
+ * 이 방식은 object-fit+transform 조합의 역방향 버그가 없고
+ * scale<1에서 빈 여백이 생기는 문제도 없음
+ */
+
 interface EditorValue {
-  x: number
-  y: number
-  scale: number
+  x: number   // 0-100, 이미지 중심의 컨테이너 내 X위치
+  y: number   // 0-100, 이미지 중심의 컨테이너 내 Y위치
+  scale: number // 1.0+
 }
 
 const props = defineProps<{
@@ -15,35 +30,49 @@ const emit = defineEmits<{
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-const isTouchDevice = ref(false)
 const isDragging = ref(false)
+const isTouchDevice = ref(false)
 
-// Pointer tracking for drag + pinch
+// Pointer state
 const activePointers = new Map<number, { x: number; y: number }>()
-let startDragX = 0
-let startDragY = 0
-let startPosX = 0
-let startPosY = 0
-let startPinchDist = 0
-let startPinchScale = 1
+let dragStartX = 0
+let dragStartY = 0
+let dragStartCx = 0
+let dragStartCy = 0
+let pinchStartDist = 0
+let pinchStartScale = 1.0
 
 onMounted(() => {
   isTouchDevice.value = navigator.maxTouchPoints > 0
 })
 
-function clamp(val: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, val))
+function clamp(v: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, v))
 }
 
-function emit_(x: number, y: number, scale: number) {
+// scale에 따른 중심점 허용 범위 계산
+// 이미지(scale*100% 크기)의 중심이 너무 치우치면 컨테이너 가장자리가 노출됨
+function limits(scale: number) {
+  const half = 50 / scale   // 이미지 반너비/반높이를 컨테이너 % 단위로 환산
+  return {
+    xMin: clamp(50 - (50 - half * scale), 0, 50),  // = 100 - scale*50 (단, min 0)
+    xMax: clamp(scale * 50, 50, 100),
+    yMin: clamp(100 - scale * 50, 0, 50),
+    yMax: clamp(scale * 50, 50, 100),
+  }
+}
+
+function emitValue(x: number, y: number, scale: number) {
+  const s = clamp(scale, 1.0, 5.0)
+  const lim = limits(s)
   emit('update:modelValue', {
-    x: clamp(x, 0, 100),
-    y: clamp(y, 0, 100),
-    scale: clamp(scale, 0.5, 4.0),
+    x: clamp(x, lim.xMin, lim.xMax),
+    y: clamp(y, lim.yMin, lim.yMax),
+    scale: s,
   })
 }
 
-function getPinchDist() {
+function pinchDist() {
   const pts = [...activePointers.values()]
   if (pts.length < 2) return 0
   const dx = pts[1].x - pts[0].x
@@ -59,14 +88,17 @@ function onPointerDown(e: PointerEvent) {
 
   if (activePointers.size === 1) {
     isDragging.value = true
-    startDragX = e.clientX
-    startDragY = e.clientY
-    startPosX = props.modelValue.x
-    startPosY = props.modelValue.y
+    dragStartX = e.clientX
+    dragStartY = e.clientY
+    dragStartCx = props.modelValue.x
+    dragStartCy = props.modelValue.y
   } else if (activePointers.size === 2) {
     isDragging.value = false
-    startPinchDist = getPinchDist()
-    startPinchScale = props.modelValue.scale
+    pinchStartDist = pinchDist()
+    pinchStartScale = props.modelValue.scale
+    // 핀치 시작 시 드래그 기준점 초기화 (손가락 줄인 후 이동 대비)
+    dragStartCx = props.modelValue.x
+    dragStartCy = props.modelValue.y
   }
 }
 
@@ -78,19 +110,19 @@ function onPointerMove(e: PointerEvent) {
   const H = containerRef.value.offsetHeight
 
   if (activePointers.size >= 2) {
-    const dist = getPinchDist()
-    if (startPinchDist > 0) {
-      const newScale = startPinchScale * (dist / startPinchDist)
-      emit_(props.modelValue.x, props.modelValue.y, newScale)
+    // 핀치: 스케일 조절
+    const dist = pinchDist()
+    if (pinchStartDist > 0) {
+      const newScale = clamp(pinchStartScale * (dist / pinchStartDist), 1.0, 5.0)
+      emitValue(props.modelValue.x, props.modelValue.y, newScale)
     }
   } else if (activePointers.size === 1 && isDragging.value) {
-    const dx = e.clientX - startDragX
-    const dy = e.clientY - startDragY
-    const s = props.modelValue.scale
-    // Divide by scale so movement feels natural at any zoom level
-    const newX = startPosX - (dx / W) * 100 / s
-    const newY = startPosY - (dy / H) * 100 / s
-    emit_(newX, newY, s)
+    // 단일 포인터: 이미지 이동 (손가락/마우스 방향 = 이미지 이동 방향)
+    const dx = e.clientX - dragStartX
+    const dy = e.clientY - dragStartY
+    const dxPct = (dx / W) * 100
+    const dyPct = (dy / H) * 100
+    emitValue(dragStartCx + dxPct, dragStartCy + dyPct, props.modelValue.scale)
   }
 }
 
@@ -98,35 +130,34 @@ function onPointerUp(e: PointerEvent) {
   activePointers.delete(e.pointerId)
   if (activePointers.size === 0) {
     isDragging.value = false
-    startPinchDist = 0
+    pinchStartDist = 0
   } else if (activePointers.size === 1) {
-    // Went from 2 fingers to 1 — restart single-finger tracking
+    // 손가락 하나 뗀 후 나머지 손가락으로 드래그 이어받기
     const [, pos] = [...activePointers.entries()][0]
-    startDragX = pos.x
-    startDragY = pos.y
-    startPosX = props.modelValue.x
-    startPosY = props.modelValue.y
+    dragStartX = pos.x
+    dragStartY = pos.y
+    dragStartCx = props.modelValue.x
+    dragStartCy = props.modelValue.y
     isDragging.value = true
   }
 }
 
 function onWheel(e: WheelEvent) {
   e.preventDefault()
-  const delta = e.deltaY / 400
-  emit_(props.modelValue.x, props.modelValue.y, props.modelValue.scale - delta)
+  emitValue(props.modelValue.x, props.modelValue.y, props.modelValue.scale - e.deltaY / 400)
 }
 
-// PC corner handle: drag up = zoom in, drag down = zoom out
+// PC 모서리 핸들: 위로 드래그 = 확대
 function onHandlePointerDown(e: PointerEvent) {
   e.stopPropagation()
   e.preventDefault()
   const startY = e.clientY
   const startScale = props.modelValue.scale
-  const H = containerRef.value?.offsetHeight ?? 220
+  const H = containerRef.value?.offsetHeight ?? 300
 
   function onMove(ev: PointerEvent) {
     const dy = ev.clientY - startY
-    emit_(props.modelValue.x, props.modelValue.y, startScale - (dy / H) * 3)
+    emitValue(props.modelValue.x, props.modelValue.y, startScale - (dy / H) * 3)
   }
   function onUp() {
     document.removeEventListener('pointermove', onMove)
@@ -136,30 +167,35 @@ function onHandlePointerDown(e: PointerEvent) {
   document.addEventListener('pointerup', onUp)
 }
 
-function resetEditor() {
-  emit_(50, 50, 1.0)
+function onScaleSlider(e: Event) {
+  const val = parseFloat((e.target as HTMLInputElement).value)
+  emitValue(props.modelValue.x, props.modelValue.y, val)
 }
 
-function onScaleInput(e: Event) {
-  const val = parseFloat((e.target as HTMLInputElement).value)
-  emit_(props.modelValue.x, props.modelValue.y, val)
+function reset() {
+  emitValue(50, 50, 1.0)
 }
 
 const imageStyle = computed(() => ({
-  objectPosition: `${props.modelValue.x}% ${props.modelValue.y}%`,
-  transform: `scale(${props.modelValue.scale})`,
-  transformOrigin: `${props.modelValue.x}% ${props.modelValue.y}%`,
-  transition: isDragging.value ? 'none' : 'transform 0.1s ease',
+  position: 'absolute' as const,
+  width: `${props.modelValue.scale * 100}%`,
+  height: `${props.modelValue.scale * 100}%`,
+  left: `${props.modelValue.x}%`,
+  top: `${props.modelValue.y}%`,
+  transform: 'translate(-50%, -50%)',
+  objectFit: 'cover' as const,
+  pointerEvents: 'none' as const,
+  userSelect: 'none' as const,
 }))
 </script>
 
 <template>
   <div class="space-y-2">
-    <!-- Interactive editor area -->
+    <!-- 9:16 비율 에디터 (상세페이지 hero와 동일 비율) -->
     <div
       ref="containerRef"
-      class="relative overflow-hidden rounded-xl border-2 border-dashed select-none"
-      style="height: 220px; touch-action: none; border-color: #86efac;"
+      class="relative overflow-hidden rounded-xl border-2 border-dashed select-none w-full"
+      style="aspect-ratio: 9/16; max-height: 360px; border-color: #86efac; touch-action: none;"
       :style="{ cursor: isDragging ? 'grabbing' : 'grab' }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
@@ -167,73 +203,66 @@ const imageStyle = computed(() => ({
       @pointercancel="onPointerUp"
       @wheel.prevent="onWheel"
     >
-      <!-- Plant image -->
       <img
         :src="imageUrl"
-        class="w-full h-full object-cover pointer-events-none select-none"
         draggable="false"
         :style="imageStyle"
       />
 
-      <!-- PC corner scale handles (hidden on touch devices) -->
+      <!-- PC 전용: 4모서리 스케일 핸들 + 초점 마커 -->
       <template v-if="!isTouchDevice">
         <div
-          v-for="(style, i) in [
+          v-for="(s, i) in [
             { top: '-5px', left: '-5px', cursor: 'nwse-resize' },
             { top: '-5px', right: '-5px', cursor: 'nesw-resize' },
             { bottom: '-5px', left: '-5px', cursor: 'nesw-resize' },
             { bottom: '-5px', right: '-5px', cursor: 'nwse-resize' },
           ]"
           :key="i"
-          class="absolute w-3.5 h-3.5 bg-white border-2 border-green-500 rounded-sm z-10"
-          :style="{ ...style }"
+          class="absolute z-10 w-3.5 h-3.5 bg-white border-2 border-green-500 rounded-sm"
+          :style="{ ...s }"
           @pointerdown="onHandlePointerDown"
         />
-        <!-- Crosshair indicator at focal point -->
+        <!-- 초점 십자선 -->
         <div
-          class="absolute w-4 h-4 pointer-events-none"
-          :style="{
-            left: `calc(${modelValue.x}% - 8px)`,
-            top: `calc(${modelValue.y}% - 8px)`,
-          }"
+          class="absolute w-5 h-5 pointer-events-none z-10"
+          :style="{ left: `calc(${modelValue.x}% - 10px)`, top: `calc(${modelValue.y}% - 10px)` }"
         >
-          <svg viewBox="0 0 16 16" fill="none" class="w-full h-full">
-            <line x1="8" y1="0" x2="8" y2="16" stroke="white" stroke-width="1.5" stroke-dasharray="2 2" />
-            <line x1="0" y1="8" x2="16" y2="8" stroke="white" stroke-width="1.5" stroke-dasharray="2 2" />
-            <circle cx="8" cy="8" r="2.5" fill="white" />
+          <svg viewBox="0 0 20 20" fill="none" class="w-full h-full drop-shadow">
+            <line x1="10" y1="0" x2="10" y2="20" stroke="white" stroke-width="1.5" stroke-dasharray="2 2"/>
+            <line x1="0" y1="10" x2="20" y2="10" stroke="white" stroke-width="1.5" stroke-dasharray="2 2"/>
+            <circle cx="10" cy="10" r="3" fill="white" fill-opacity="0.9"/>
           </svg>
         </div>
       </template>
 
-      <!-- Hints -->
-      <div
-        class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none"
-      >
-        <span class="text-[10px] text-white/80 bg-black/40 px-1.5 py-0.5 rounded">
+      <!-- 힌트 + 배율 표시 -->
+      <div class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none">
+        <span class="text-[10px] text-white/90 bg-black/40 px-1.5 py-0.5 rounded leading-tight">
           {{ isTouchDevice ? '한 손가락 이동 · 두 손가락 확대' : '드래그 이동 · 스크롤/모서리 확대' }}
         </span>
-        <span class="text-[11px] text-white font-medium bg-black/40 px-1.5 py-0.5 rounded">
-          {{ modelValue.scale.toFixed(1) }}×
+        <span class="text-[11px] text-white font-semibold bg-black/40 px-1.5 py-0.5 rounded">
+          {{ modelValue.scale.toFixed(2) }}×
         </span>
       </div>
     </div>
 
-    <!-- Scale slider + reset -->
-    <div class="flex items-center gap-2 px-1">
-      <span class="text-xs text-gray-400 shrink-0">0.5×</span>
+    <!-- 배율 슬라이더 -->
+    <div class="flex items-center gap-2 px-0.5">
+      <span class="text-xs text-gray-400 shrink-0">1×</span>
       <input
         type="range"
-        min="0.5"
-        max="4"
+        min="1"
+        max="5"
         step="0.05"
         :value="modelValue.scale"
-        @input="onScaleInput"
+        @input="onScaleSlider"
         class="flex-1 h-1 accent-green-600 cursor-pointer"
       />
-      <span class="text-xs text-gray-400 shrink-0">4×</span>
+      <span class="text-xs text-gray-400 shrink-0">5×</span>
       <button
         type="button"
-        @click="resetEditor"
+        @click="reset"
         class="shrink-0 text-xs text-gray-400 hover:text-gray-600 ml-1 transition-colors"
       >
         초기화

@@ -9,20 +9,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 503, statusMessage: 'OPENAI_API_KEY가 설정되지 않았습니다' })
   }
 
-  const { prompt } = await readBody(event) as { prompt: string }
+  const { prompt, isSquare } = await readBody(event) as { prompt: string; isSquare?: boolean }
   if (!prompt) {
     throw createError({ statusCode: 400, statusMessage: 'prompt가 필요합니다' })
   }
 
   const client = new OpenAI({ apiKey })
 
+  // 이모티콘/스티커 요청은 1:1, 그 외 식물 사진은 세로형(상세페이지 비율)
+  const isEmojiStyle = isSquare || /emoji|sticker|icon|cute|chibi|kawaii/i.test(prompt)
+  const size = isEmojiStyle ? '1024x1024' : '1024x1536'
+
   let response
   try {
     response = await client.images.generate({
       model: 'gpt-image-1',
-      prompt: `식물 사진. 배경은 깔끔한 흰색이나 밝은 색. 사진 스타일: ${prompt}`,
+      prompt: isEmojiStyle
+        ? prompt
+        : `Plant photo for mobile display (portrait orientation). Clean white or bright background. Style: ${prompt}`,
       n: 1,
-      size: '1024x1024',
+      size,
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)

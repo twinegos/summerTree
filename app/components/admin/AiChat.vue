@@ -98,6 +98,7 @@ async function send() {
         fields?: FillFieldsAction
         prompt?: string
         imageUrl?: string
+        isSquare?: boolean
         style?: StylePageAction
       }>
     }>('/api/admin/ai/chat', {
@@ -131,7 +132,7 @@ async function send() {
         try {
           const genRes = await $fetch<{ imageUrl: string }>('/api/admin/ai/generate-image', {
             method: 'POST',
-            body: { prompt: action.prompt },
+            body: { prompt: action.prompt, isSquare: action.isSquare ?? false },
           })
           messages.value.pop()
           lastGeneratedImageUrl.value = genRes.imageUrl

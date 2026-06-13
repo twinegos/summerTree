@@ -13,6 +13,25 @@ const thumbnailUrl = computed(() =>
 const formattedPrice = computed(() =>
   props.plant.price.toLocaleString('ko-KR') + '원'
 )
+
+function parsePosStr(pos: string | null | undefined) {
+  const parts = (pos || '50% 50%').split(' ')
+  return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 }
+}
+
+const thumbnailStyle = computed(() => {
+  const { x, y } = parsePosStr(props.plant.image_position)
+  const s = props.plant.image_scale ?? 1
+  return {
+    position: 'absolute' as const,
+    width: `${s * 100}%`,
+    height: `${s * 100}%`,
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: 'translate(-50%, -50%)',
+    objectFit: 'cover' as const,
+  }
+})
 </script>
 
 <template>
@@ -23,19 +42,14 @@ const formattedPrice = computed(() =>
   >
     <!-- 이미지 -->
     <div
-      class="aspect-square overflow-hidden mb-2.5"
+      class="relative aspect-square overflow-hidden mb-2.5"
       style="background: var(--bg-light); border-radius: 4px;"
     >
       <img
         v-if="thumbnailUrl"
         :src="thumbnailUrl"
         :alt="plant.name"
-        class="w-full h-full object-cover transition-[transform] duration-500"
-        :style="{
-          objectPosition: plant.image_position || '50% 50%',
-          transform: `scale(${plant.image_scale ?? 1})`,
-          transformOrigin: plant.image_position || '50% 50%',
-        }"
+        :style="thumbnailStyle"
       />
       <div v-else class="w-full h-full flex items-center justify-center">
         <svg class="w-8 h-8" style="color: var(--border);" fill="none" viewBox="0 0 24 24" stroke="currentColor">

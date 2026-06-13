@@ -35,11 +35,12 @@ const tools: Anthropic.Tool[] = [
   },
   {
     name: 'generate_image',
-    description: 'OpenAI로 식물 이미지를 새로 생성합니다. 이미지가 없을 때 사용합니다.',
+    description: 'OpenAI로 식물 이미지를 새로 생성합니다. 이미지가 없을 때 사용합니다. 기본은 세로형(9:16). 이모티콘/스티커 스타일 요청은 isSquare:true로 설정하세요.',
     input_schema: {
       type: 'object' as const,
       properties: {
-        prompt: { type: 'string', description: '이미지 생성 프롬프트 (영어 권장, 예: monstera plant in white ceramic pot, bright background)' },
+        prompt: { type: 'string', description: '이미지 생성 프롬프트 (영어, 예: monstera plant in white ceramic pot, bright background)' },
+        isSquare: { type: 'boolean', description: '이모티콘/스티커/아이콘 스타일 요청 시 true. 일반 식물 사진은 false(기본).' },
       },
       required: ['prompt'],
     },
@@ -181,8 +182,8 @@ ${currentImages}${lastGenInfo}
       if (block.name === 'fill_fields') {
         actions.push({ type: 'fill_fields', fields: block.input as Record<string, unknown> })
       } else if (block.name === 'generate_image') {
-        const input = block.input as { prompt: string }
-        actions.push({ type: 'generate_image', prompt: input.prompt })
+        const input = block.input as { prompt: string; isSquare?: boolean }
+        actions.push({ type: 'generate_image', prompt: input.prompt, isSquare: input.isSquare })
       } else if (block.name === 'edit_image') {
         const input = block.input as { prompt: string; imageUrl: string }
         actions.push({ type: 'edit_image', prompt: input.prompt, imageUrl: input.imageUrl })

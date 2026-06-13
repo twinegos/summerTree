@@ -21,6 +21,26 @@ const formattedPrice = computed(() =>
 const isOutOfStock = computed(() => (plant.value?.stock ?? 0) === 0)
 const categoryName = computed(() => plant.value?.categories?.name ?? '')
 
+function parsePosStr(pos: string | null | undefined) {
+  const parts = (pos || '50% 50%').split(' ')
+  return { x: parseFloat(parts[0]) || 50, y: parseFloat(parts[1]) || 50 }
+}
+
+const heroImageStyle = computed(() => {
+  if (!plant.value) return {}
+  const { x, y } = parsePosStr(plant.value.image_position)
+  const s = plant.value.image_scale ?? 1
+  return {
+    position: 'absolute' as const,
+    width: `${s * 100}%`,
+    height: `${s * 100}%`,
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: 'translate(-50%, -50%)',
+    objectFit: 'cover' as const,
+  }
+})
+
 const fontFamilyMap: Record<string, string> = {
   serif: '"Noto Serif", Georgia, "Batang", serif',
   mono: '"Courier New", Courier, monospace',
@@ -122,20 +142,18 @@ onMounted(load)
           style="scrollbar-width: none;"
           @scroll="onGalleryScroll"
         >
-          <img
+          <div
             v-for="(url, i) in plant.image_urls"
             :key="i"
-            :src="url"
-            :alt="`${plant.name} ${i + 1}`"
-            class="shrink-0 snap-center object-cover"
-            :style="{
-              width: '100%',
-              height: '672px',
-              objectPosition: plant.image_position || '50% 50%',
-              transform: `scale(${plant.image_scale ?? 1})`,
-              transformOrigin: plant.image_position || '50% 50%',
-            }"
-          />
+            class="relative shrink-0 snap-center overflow-hidden"
+            style="width: 100%; height: 672px; flex-shrink: 0;"
+          >
+            <img
+              :src="url"
+              :alt="`${plant.name} ${i + 1}`"
+              :style="heroImageStyle"
+            />
+          </div>
         </div>
         <div v-else class="h-full flex items-center justify-center">
           <svg class="w-12 h-12" style="color: var(--border);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
