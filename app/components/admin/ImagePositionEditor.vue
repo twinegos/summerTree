@@ -33,10 +33,13 @@ function clamp(v: number, lo: number, hi: number) {
 }
 
 function emitValue(x: number, y: number, scale: number) {
+  const s = clamp(scale, 0.1, 5.0)
+  // scale >= 1 (cover): 이미지가 프레임을 채우므로 빈 여백 방지를 위해 0-100 클램프
+  // scale < 1 (contain): 이미지가 프레임보다 작으므로 자유롭게 배치 허용
   emit('update:modelValue', {
-    x: clamp(x, 0, 100),
-    y: clamp(y, 0, 100),
-    scale: clamp(scale, 0.1, 5.0),
+    x: s >= 1 ? clamp(x, 0, 100) : x,
+    y: s >= 1 ? clamp(y, 0, 100) : y,
+    scale: s,
   })
 }
 
