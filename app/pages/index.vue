@@ -49,7 +49,7 @@ onMounted(async () => {
 
     <div class="max-w-[480px] mx-auto">
       <!-- 히어로 (배경 이미지 + 텍스트) -->
-      <section class="relative overflow-hidden px-5 py-14" :class="heroImage ? '' : ''">
+      <section class="relative overflow-hidden px-5 pt-[30vh] pb-14">
         <!-- 배경 이미지 -->
         <div v-if="heroImage" class="absolute inset-0">
           <img
