@@ -54,14 +54,45 @@ watchEffect(() => {
   }
 })
 
+// 드래그 속도에 따라 카테고리 간격이 실시간으로 늘어나고 줄어드는 효과
+const dragSpacing = ref(0)
+let _lastTouchY = 0
+let _rafDecay: number | null = null
+
+function onTouchStart(e: TouchEvent) {
+  _lastTouchY = e.touches[0].clientY
+  if (_rafDecay) { cancelAnimationFrame(_rafDecay); _rafDecay = null }
+}
+
+function onTouchMove(e: TouchEvent) {
+  const y = e.touches[0].clientY
+  const dy = _lastTouchY - y // 양수 = 손가락이 위로 이동 (스크롤 다운)
+  _lastTouchY = y
+  dragSpacing.value = Math.max(0, Math.min(28, dy * 1.4))
+}
+
+function onTouchEnd() {
+  const decay = () => {
+    if (dragSpacing.value < 0.5) { dragSpacing.value = 0; _rafDecay = null; return }
+    dragSpacing.value *= 0.72
+    _rafDecay = requestAnimationFrame(decay)
+  }
+  _rafDecay = requestAnimationFrame(decay)
+}
+
 onUnmounted(() => {
+  if (_rafDecay) cancelAnimationFrame(_rafDecay)
   document.body.style.backgroundColor = ''
 })
 </script>
 
 <template>
   <!-- flex-col: 푸터가 남은 높이를 채울 수 있도록 -->
-  <div class="min-h-screen flex flex-col" style="background: var(--bg);">
+  <div class="min-h-screen flex flex-col" style="background: var(--bg);"
+    @touchstart.passive="onTouchStart"
+    @touchmove.passive="onTouchMove"
+    @touchend="onTouchEnd"
+  >
 
     <!-- 헤더: w-full로 항상 전체 너비, justify-between으로 좌우 배치 -->
     <header class="w-full px-5 pt-6 pb-4 flex items-center justify-between sm:px-8 sm:pt-8 sm:pb-5">
@@ -117,7 +148,7 @@ onUnmounted(() => {
         :key="cat.id"
         @mouseenter="hoveredId = cat.id"
         @mouseleave="hoveredId = null"
-        :style="`background: ${categoryBg(i)};`"
+        :style="`background: ${categoryBg(i)}; padding-bottom: ${dragSpacing}px;`"
       >
         <NuxtLink
           :to="`/plants?category=${encodeURIComponent(cat.name)}`"
