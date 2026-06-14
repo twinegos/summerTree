@@ -108,22 +108,33 @@ function onTouchMove(e: TouchEvent) {
 
   if (Math.abs(dy) < 4) return
 
-  const scrollY = window.scrollY
-  const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-  if (maxScroll > 50 && ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0))) return
-
-  _touchMaxSpacing = Math.max(_touchMaxSpacing, Math.min(80, Math.abs(dy) * 4.0))
-  _animateTo(_touchMaxSpacing)
+  if (dy > 0) {
+    // 손가락 아래 (위로 스크롤) → 간격 넓어짐
+    _touchMaxSpacing = Math.max(_touchMaxSpacing, Math.min(80, Math.abs(dy) * 4.0))
+    _animateTo(_touchMaxSpacing)
+  } else {
+    // 손가락 위 (아래로 스크롤) → 간격 좁아짐
+    _touchMaxSpacing = 0
+    _animateTo(0)
+  }
 }
 
 function onTouchEnd() {
   _decayToZero()
+  _touchMaxSpacing = 0
 }
 
 // ── PC 마우스 휠 / 트랙패드 ──
 function onWheel(e: WheelEvent) {
   if (Math.abs(e.deltaY) < 5) return
-  _animateTo(Math.min(80, Math.abs(e.deltaY) * 0.6))
+
+  if (e.deltaY < 0) {
+    // 위로 스크롤 → 간격 넓어짐
+    _animateTo(Math.min(80, Math.abs(e.deltaY) * 0.6))
+  } else {
+    // 아래로 스크롤 → 간격 좁아짐
+    _animateTo(0)
+  }
   if (_wheelTimer) clearTimeout(_wheelTimer)
   _wheelTimer = setTimeout(_decayToZero, 200)
 }
