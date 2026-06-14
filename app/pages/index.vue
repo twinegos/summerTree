@@ -41,57 +41,64 @@ watchEffect(() => {
   }
 })
 
-// 스크롤(터치) 속도에 따라 카테고리 간격이 실시간으로 변하는 효과
-// Vue reactivity 없이 DOM 직접 조작 — transition 재시작 아티팩트 방지
-let _spacing = 0
-let _targetSpacing = 0
-let _lastTouchY = 0
-let _isTouching = false
-let _rafId: number | null = null
-let _navEl: HTMLElement | null = null
-let _catColors: string[] = []
+// 스크롤 속도에 따라 카테고리 간격이 벌어지는 효과 — GSAP 기반
+// transform만 사용 (GPU 가속, layout reflow 없음)
+import gsap from 'gsap'
 
-function _applySpacing() {
-  if (!_navEl) _navEl = document.querySelector<HTMLElement>('nav')
+const _gsapState = { spacing: 0 }
+let _lastTouchY = 0
+let _touchMaxSpacing = 0
+let _catColors: string[] = []
+let _footerEl: HTMLElement | null = null
+let _wheelTimer: ReturnType<typeof setTimeout> | null = null
+
+function _applyFromState() {
+  if (!_footerEl) _footerEl = document.querySelector<HTMLElement>('.cat-footer')
   const items = Array.from(document.querySelectorAll<HTMLElement>('.cat-item'))
 
-  // bg 색상 최초 1회 캐시
   if (!_catColors.length && items.length) {
     _catColors = items.map(el => getComputedStyle(el).backgroundColor)
   }
 
-  const active = _spacing > 0.3
-  const gapSize = _spacing * 0.5  // 인접 카테고리 이동 차이 = gap 크기
+  const s = _gsapState.spacing
+  const active = s > 0.3
+  const gapSize = s * 0.5
 
   items.forEach((el, i) => {
-    el.style.transform = active ? `translateY(${_spacing * (i + 1) * 0.5}px)` : ''
-    el.style.willChange = active ? 'transform' : ''
-    // 자신 아래 gap을 자신의 색으로 채움 → gap이 항상 바로 위 카테고리 색으로 보임
+    el.style.transform = active ? `translateY(${s * (i + 1) * 0.5}px)` : ''
     el.style.boxShadow = active ? `0 ${gapSize}px 0 0 ${_catColors[i] ?? ''}` : ''
   })
-  if (_navEl) {
-    _navEl.style.paddingBottom = active ? `${_spacing * items.length * 0.5}px` : ''
-    _navEl.style.background = ''
+  // 푸터도 transform 이동 — paddingBottom(reflow) 대신 GPU 가속
+  if (_footerEl) {
+    _footerEl.style.transform = active ? `translateY(${s * items.length * 0.5}px)` : ''
   }
 }
 
-function _tick() {
-  if (_isTouching) {
-    // 느린 lerp → 작은 진동이 즉시 반영되지 않아 부드러움
-    _spacing += (_targetSpacing - _spacing) * 0.12
-    _targetSpacing *= 0.90
-  } else {
-    _spacing *= 0.88
-    if (_spacing < 0.5) { _spacing = 0; _applySpacing(); _rafId = null; return }
-  }
-  _applySpacing()
-  _rafId = requestAnimationFrame(_tick)
+function _animateTo(target: number) {
+  gsap.to(_gsapState, {
+    spacing: target,
+    duration: 0.35,
+    ease: 'power2.out',
+    overwrite: 'auto',
+    onUpdate: _applyFromState,
+  })
 }
 
+function _decayToZero() {
+  gsap.to(_gsapState, {
+    spacing: 0,
+    duration: 0.55,
+    ease: 'power2.inOut',
+    overwrite: true,
+    onUpdate: _applyFromState,
+    onComplete: _applyFromState,
+  })
+}
+
+// ── 모바일 터치 ──
 function onTouchStart(e: TouchEvent) {
   _lastTouchY = e.touches[0].clientY
-  _isTouching = true
-  if (!_rafId) _rafId = requestAnimationFrame(_tick)
+  _touchMaxSpacing = 0
 }
 
 function onTouchMove(e: TouchEvent) {
@@ -99,19 +106,26 @@ function onTouchMove(e: TouchEvent) {
   const dy = y - _lastTouchY
   _lastTouchY = y
 
-  // dead zone: 4px 미만 미세 진동은 무시
   if (Math.abs(dy) < 4) return
 
   const scrollY = window.scrollY
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-  if (maxScroll > 50) {
-    if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) return
-  }
-  _targetSpacing = Math.max(_targetSpacing, Math.min(80, Math.abs(dy) * 4.0))
+  if (maxScroll > 50 && ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0))) return
+
+  _touchMaxSpacing = Math.max(_touchMaxSpacing, Math.min(80, Math.abs(dy) * 4.0))
+  _animateTo(_touchMaxSpacing)
 }
 
 function onTouchEnd() {
-  _isTouching = false
+  _decayToZero()
+}
+
+// ── PC 마우스 휠 / 트랙패드 ──
+function onWheel(e: WheelEvent) {
+  if (Math.abs(e.deltaY) < 5) return
+  _animateTo(Math.min(80, Math.abs(e.deltaY) * 0.6))
+  if (_wheelTimer) clearTimeout(_wheelTimer)
+  _wheelTimer = setTimeout(_decayToZero, 200)
 }
 
 onMounted(async () => {
@@ -128,7 +142,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (_rafId) cancelAnimationFrame(_rafId)
+  gsap.killTweensOf(_gsapState)
+  if (_wheelTimer) clearTimeout(_wheelTimer)
   document.body.style.backgroundColor = ''
 })
 </script>
@@ -139,6 +154,7 @@ onUnmounted(() => {
     @touchstart.passive="onTouchStart"
     @touchmove.passive="onTouchMove"
     @touchend="onTouchEnd"
+    @wheel.passive="onWheel"
   >
 
     <!-- 헤더: w-full로 항상 전체 너비, justify-between으로 좌우 배치 -->
@@ -222,7 +238,7 @@ onUnmounted(() => {
 
     <!-- 푸터: 마지막 카테고리 색상 + flex-1 -->
     <div
-      class="flex-1"
+      class="flex-1 cat-footer"
       :style="`background: ${categories.length ? categoryBg(categories.length - 1) : 'var(--bg)'};`"
     >
       <div class="max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 py-8 flex justify-end" style="border-top: 1px solid rgba(0,0,0,0.2);">
