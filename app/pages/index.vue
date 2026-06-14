@@ -42,16 +42,36 @@ watchEffect(() => {
 })
 
 // 스크롤(터치) 속도에 따라 카테고리 간격이 실시간으로 변하는 효과
-const scrollSpacing = ref(0)
-const isActiveTouch = ref(false)
+// Vue reactivity 없이 DOM 직접 조작 — transition 재시작 아티팩트 방지
+let _spacing = 0          // 현재 간격값
+let _targetSpacing = 0   // 목표 간격값
 let _lastTouchY = 0
-let _pendingTarget = 0
-let _rafUpdate: number | null = null
+let _isTouching = false
+let _rafId: number | null = null
+
+function _applySpacing() {
+  document.querySelectorAll<HTMLElement>('.cat-item').forEach(el => {
+    el.style.paddingTop = `${_spacing * 0.5}px`
+    el.style.paddingBottom = `${_spacing * 0.5}px`
+  })
+}
+
+function _tick() {
+  if (_isTouching) {
+    _spacing = _spacing * 0.35 + _targetSpacing * 0.65
+    _targetSpacing *= 0.78  // 목표도 자연 감소 → 손가락 속도 줄면 간격도 자연히 줄어듦
+  } else {
+    _spacing *= 0.80
+    if (_spacing < 0.3) { _spacing = 0; _applySpacing(); _rafId = null; return }
+  }
+  _applySpacing()
+  _rafId = requestAnimationFrame(_tick)
+}
 
 function onTouchStart(e: TouchEvent) {
   _lastTouchY = e.touches[0].clientY
-  isActiveTouch.value = true
-  if (_rafUpdate) { cancelAnimationFrame(_rafUpdate); _rafUpdate = null }
+  _isTouching = true
+  if (!_rafId) _rafId = requestAnimationFrame(_tick)
 }
 
 function onTouchMove(e: TouchEvent) {
@@ -59,26 +79,21 @@ function onTouchMove(e: TouchEvent) {
   const dy = y - _lastTouchY
   _lastTouchY = y
 
-  // 상하 경계 오버스크롤 무시 (떨림 방지)
+  // 실제로 스크롤 가능한 페이지에서만 경계 체크 (짧은 페이지에서 오작동 방지)
   const scrollY = window.scrollY
-  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
-  if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) return
-
-  _pendingTarget = Math.min(20, Math.abs(dy) * 3.0)
-
-  if (!_rafUpdate) {
-    _rafUpdate = requestAnimationFrame(() => {
-      scrollSpacing.value = scrollSpacing.value * 0.5 + _pendingTarget * 0.5
-      _rafUpdate = null
-    })
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+  if (maxScroll > 50) {
+    if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) {
+      _targetSpacing *= 0.4
+      return
+    }
   }
+  _targetSpacing = Math.max(_targetSpacing, Math.min(44, Math.abs(dy) * 4.5))
 }
 
 function onTouchEnd() {
-  if (_rafUpdate) { cancelAnimationFrame(_rafUpdate); _rafUpdate = null }
-  isActiveTouch.value = false
-  // CSS transition이 500ms ease-out으로 0까지 부드럽게 복귀
-  scrollSpacing.value = 0
+  _isTouching = false
+  // RAF 루프가 계속 실행되며 자연 decay
 }
 
 onMounted(async () => {
@@ -95,7 +110,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (_rafUpdate) cancelAnimationFrame(_rafUpdate)
+  if (_rafId) cancelAnimationFrame(_rafId)
   document.body.style.backgroundColor = ''
 })
 </script>
@@ -160,14 +175,10 @@ onUnmounted(() => {
       <div
         v-for="(cat, i) in categories"
         :key="cat.id"
+        class="cat-item"
         @mouseenter="hoveredId = cat.id"
         @mouseleave="hoveredId = null"
-        :style="`
-          background: ${categoryBg(i)};
-          padding-top: ${scrollSpacing * 0.5}px;
-          padding-bottom: ${scrollSpacing * 0.5}px;
-          transition: padding ${isActiveTouch ? '40ms linear' : '500ms ease-out'};
-        `"
+        :style="`background: ${categoryBg(i)};`"
       >
         <NuxtLink
           :to="`/plants?category=${encodeURIComponent(cat.name)}`"
