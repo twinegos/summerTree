@@ -15,6 +15,16 @@ function pickRandom<T>(arr: T[]): T | null {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+function pickNextImage(images: string[]): string | null {
+  if (!images?.length) return null
+  if (images.length === 1) return images[0]
+  const last = localStorage.getItem('lastHeroImage')
+  const pool = last ? images.filter(url => url !== last) : images
+  const picked = pool[Math.floor(Math.random() * pool.length)]
+  localStorage.setItem('lastHeroImage', picked)
+  return picked
+}
+
 onMounted(async () => {
   const [, { data }] = await Promise.all([
     fetchCategories(),
@@ -23,7 +33,7 @@ onMounted(async () => {
 
   if (data) {
     settings.value = data
-    heroImage.value = pickRandom(data.hero_images) ?? null
+    heroImage.value = pickNextImage(data.hero_images)
     heroPhrase.value = pickRandom(data.hero_phrases) ?? ''
   }
 })
