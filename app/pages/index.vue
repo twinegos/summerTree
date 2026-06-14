@@ -6,6 +6,15 @@ definePageMeta({ layout: false })
 const { categories, fetchCategories } = useCategories()
 const { fetchSettings } = useHomeSettings()
 
+const hoveredId = ref<string | null>(null)
+
+// 카테고리 인덱스에 따라 점진적으로 진해지는 배경색
+function categoryBg(index: number): string {
+  // 기본 --bg: #E8EAD8 ≈ hsl(66, 25%, 88%)
+  const lightness = Math.max(68, 85 - index * 6)
+  return `hsl(66, 22%, ${lightness}%)`
+}
+
 const settings = ref<HomeSettings | null>(null)
 const heroImage = ref<string | null>(null)
 const heroPhrase = ref<string>('')
@@ -81,23 +90,44 @@ onMounted(async () => {
         <div class="h-px" style="background: var(--border);" />
 
         <!-- 카테고리 목록 -->
-        <nav class="py-8">
+        <nav class="py-4">
+          <!-- 전체보기: 설명 없는 단순 링크 -->
           <NuxtLink
             to="/plants"
-            class="block py-3 text-2xl font-bold tracking-tight transition-colors"
-            style="color: var(--dark);"
+            class="block px-4 py-4 text-2xl font-bold tracking-tight transition-colors"
+            style="color: var(--dark); background: var(--bg);"
           >
             전체보기
           </NuxtLink>
-          <NuxtLink
-            v-for="cat in categories"
+
+          <!-- 카테고리별 아코디언 -->
+          <div
+            v-for="(cat, i) in categories"
             :key="cat.id"
-            :to="`/plants?category=${encodeURIComponent(cat.name)}`"
-            class="block py-3 text-2xl font-bold tracking-tight transition-colors"
-            style="color: var(--dark);"
+            @mouseenter="hoveredId = cat.id"
+            @mouseleave="hoveredId = null"
+            :style="`background: ${categoryBg(i)};`"
           >
-            {{ cat.name }}
-          </NuxtLink>
+            <NuxtLink
+              :to="`/plants?category=${encodeURIComponent(cat.name)}`"
+              class="block px-4 py-4 text-2xl font-bold tracking-tight"
+              style="color: var(--dark);"
+            >
+              {{ cat.name }}
+            </NuxtLink>
+
+            <!-- 슬라이드 설명 (grid-template-rows 애니메이션) -->
+            <div
+              class="grid transition-all duration-300 ease-in-out"
+              :style="hoveredId === cat.id ? 'grid-template-rows: 1fr;' : 'grid-template-rows: 0fr;'"
+            >
+              <div class="overflow-hidden">
+                <p class="px-4 pb-4 text-sm leading-relaxed" style="color: var(--muted);">
+                  {{ cat.description }}
+                </p>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <!-- 푸터 -->
