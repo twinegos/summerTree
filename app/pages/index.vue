@@ -49,93 +49,95 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background: var(--bg);">
+  <!-- flex-col: 푸터가 남은 높이를 채울 수 있도록 -->
+  <div class="min-h-screen flex flex-col" style="background: var(--bg);">
 
-      <!-- 헤더 -->
-      <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
-        <BrandLogo />
-        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
-      </header>
+    <!-- 헤더: 모바일 중앙 480px / PC 풀 와이드 -->
+    <header class="max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 pt-6 pb-4 flex items-center justify-between">
+      <BrandLogo />
+      <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
+    </header>
 
-      <!-- 히어로: 풀 와이드 (max-width 없음) -->
-      <section class="relative overflow-hidden" style="min-height: 55vh;">
-        <!-- 배경 이미지: object-fit cover로 화면 꽉 채움 -->
-        <div v-if="heroImage" class="absolute inset-0">
-          <img
-            :src="heroImage"
-            class="w-full h-full object-cover"
-            :style="`opacity: ${settings?.hero_image_opacity ?? 0.5}`"
-          />
-        </div>
-
-        <!-- 텍스트: 중앙 480px 기준 -->
-        <div class="relative z-10 max-w-[480px] mx-auto px-5 pt-[30vh] pb-14">
-          <p class="text-xs font-medium tracking-widest uppercase mb-4" style="color: var(--muted);">Plant Shop</p>
-          <h1
-            class="font-bold leading-[1.1] tracking-tight mb-6"
-            :class="heroPhrase.length > 12 ? 'text-4xl' : 'text-5xl'"
-            style="color: var(--dark);"
-          >
-            {{ heroPhrase || '당신의\n공간에\n초록을.' }}
-          </h1>
-          <p class="text-sm leading-relaxed" style="color: var(--muted);">
-            식물과 함께하는 일상.<br />QR 코드로 식물의 이야기를 만나보세요.
-          </p>
-        </div>
-      </section>
-
-      <!-- 구분선 -->
-      <div class="h-px" style="background: var(--border);" />
-
-      <!-- 카테고리 목록: 풀 와이드, 텍스트만 480px 중앙 정렬 -->
-      <nav>
-        <!-- 전체보기 -->
-        <div style="background: var(--bg);">
-          <NuxtLink
-            to="/plants"
-            class="block max-w-[480px] mx-auto px-5 py-4 text-2xl font-bold tracking-tight"
-            style="color: var(--dark);"
-          >
-            전체보기
-          </NuxtLink>
-        </div>
-
-        <!-- 카테고리별 아코디언 -->
-        <div
-          v-for="(cat, i) in categories"
-          :key="cat.id"
-          @mouseenter="hoveredId = cat.id"
-          @mouseleave="hoveredId = null"
-          :style="`background: ${categoryBg(i)};`"
+    <!-- 히어로: 풀 와이드 -->
+    <section class="relative overflow-hidden" style="min-height: 55vh;">
+      <div v-if="heroImage" class="absolute inset-0">
+        <img
+          :src="heroImage"
+          class="w-full h-full object-cover"
+          :style="`opacity: ${settings?.hero_image_opacity ?? 0.5}`"
+        />
+      </div>
+      <!-- 텍스트: 모바일 중앙 480px / PC 풀 와이드 왼쪽 정렬 -->
+      <div class="relative z-10 max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 pt-[30vh] pb-14">
+        <p class="text-xs font-medium tracking-widest uppercase mb-4" style="color: var(--muted);">Plant Shop</p>
+        <h1
+          class="font-bold leading-[1.1] tracking-tight mb-6"
+          :class="heroPhrase.length > 12 ? 'text-4xl' : 'text-5xl'"
+          style="color: var(--dark);"
         >
-          <NuxtLink
-            :to="`/plants?category=${encodeURIComponent(cat.name)}`"
-            class="block max-w-[480px] mx-auto px-5 py-4 text-2xl font-bold tracking-tight"
-            style="color: var(--dark);"
-          >
-            {{ cat.name }}
-          </NuxtLink>
+          {{ heroPhrase || '당신의\n공간에\n초록을.' }}
+        </h1>
+        <p class="text-sm leading-relaxed" style="color: var(--muted);">
+          식물과 함께하는 일상.<br />QR 코드로 식물의 이야기를 만나보세요.
+        </p>
+      </div>
+    </section>
 
-          <!-- 슬라이드 설명 -->
-          <div
-            class="grid transition-all duration-300 ease-in-out"
-            :style="hoveredId === cat.id ? 'grid-template-rows: 1fr;' : 'grid-template-rows: 0fr;'"
-          >
-            <div class="overflow-hidden">
-              <p class="max-w-[480px] mx-auto px-5 pb-4 text-sm leading-relaxed" style="color: var(--muted);">
-                {{ cat.description }}
-              </p>
-            </div>
+    <!-- 구분선: 풀 와이드 -->
+    <div class="h-px" style="background: rgba(0,0,0,0.15);" />
+
+    <!-- 카테고리 목록 -->
+    <nav>
+      <!-- 전체보기 -->
+      <div style="background: var(--bg);">
+        <NuxtLink
+          to="/plants"
+          class="block max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 py-4 text-2xl font-bold tracking-tight"
+          style="color: var(--dark);"
+        >
+          전체보기
+        </NuxtLink>
+      </div>
+
+      <!-- 카테고리별 아코디언 -->
+      <div
+        v-for="(cat, i) in categories"
+        :key="cat.id"
+        @mouseenter="hoveredId = cat.id"
+        @mouseleave="hoveredId = null"
+        :style="`background: ${categoryBg(i)};`"
+      >
+        <NuxtLink
+          :to="`/plants?category=${encodeURIComponent(cat.name)}`"
+          class="block max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 py-4 text-2xl font-bold tracking-tight"
+          style="color: var(--dark);"
+        >
+          {{ cat.name }}
+        </NuxtLink>
+
+        <!-- 슬라이드 설명 -->
+        <div
+          class="grid transition-all duration-300 ease-in-out"
+          :style="hoveredId === cat.id ? 'grid-template-rows: 1fr;' : 'grid-template-rows: 0fr;'"
+        >
+          <div class="overflow-hidden">
+            <p class="max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 pb-4 text-sm leading-relaxed" style="color: var(--muted);">
+              {{ cat.description }}
+            </p>
           </div>
         </div>
-      </nav>
-
-      <!-- 푸터: 마지막 카테고리 색상으로 풀 와이드 -->
-      <div :style="`background: ${categories.length ? categoryBg(categories.length - 1) : 'var(--bg)'};`">
-        <div class="max-w-[480px] mx-auto px-5 py-8 flex justify-end" style="border-top: 1px solid rgba(0,0,0,0.2);">
-          <NuxtLink to="/admin" class="text-xs" style="color: rgba(0,0,0,0.35);">관리자</NuxtLink>
-        </div>
       </div>
+    </nav>
+
+    <!-- 푸터: 마지막 카테고리 색상 + flex-1로 브라우저 하단까지 채움 -->
+    <div
+      class="flex-1"
+      :style="`background: ${categories.length ? categoryBg(categories.length - 1) : 'var(--bg)'};`"
+    >
+      <div class="max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 py-8 flex justify-end" style="border-top: 1px solid rgba(0,0,0,0.2);">
+        <NuxtLink to="/admin" class="text-xs" style="color: rgba(0,0,0,0.35);">관리자</NuxtLink>
+      </div>
+    </div>
 
   </div>
 </template>
