@@ -41,31 +41,51 @@ watchEffect(() => {
   }
 })
 
-// 스크롤 속도에 따라 카테고리 간격이 실시간으로 늘어나고 줄어드는 효과
+// 스크롤(터치) 속도에 따라 카테고리 간격이 실시간으로 변하는 효과
 const scrollSpacing = ref(0)
-let _prevScrollY = 0
+let _lastTouchY = 0
+let _pendingTarget = 0
+let _rafUpdate: number | null = null
 let _rafDecay: number | null = null
 
-function onScroll() {
-  const scrollY = window.scrollY
-  const speed = Math.abs(scrollY - _prevScrollY)
-  _prevScrollY = scrollY
-
-  const target = Math.min(28, speed * 0.9)
-  if (target > scrollSpacing.value) scrollSpacing.value = target
-
+function onTouchStart(e: TouchEvent) {
+  _lastTouchY = e.touches[0].clientY
   if (_rafDecay) { cancelAnimationFrame(_rafDecay); _rafDecay = null }
+  if (_rafUpdate) { cancelAnimationFrame(_rafUpdate); _rafUpdate = null }
+}
+
+function onTouchMove(e: TouchEvent) {
+  const y = e.touches[0].clientY
+  const dy = y - _lastTouchY
+  _lastTouchY = y
+
+  // 스크롤 상하 경계에서 오버스크롤 중이면 무시 (화면 떨림 방지)
+  const scrollY = window.scrollY
+  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+  if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) return
+
+  _pendingTarget = Math.min(32, Math.abs(dy) * 3.5)
+
+  if (!_rafUpdate) {
+    _rafUpdate = requestAnimationFrame(() => {
+      // lerp로 부드럽게 이동 (급격한 레이아웃 변화 방지)
+      scrollSpacing.value = scrollSpacing.value * 0.3 + _pendingTarget * 0.7
+      _rafUpdate = null
+    })
+  }
+}
+
+function onTouchEnd() {
+  if (_rafUpdate) { cancelAnimationFrame(_rafUpdate); _rafUpdate = null }
   const decay = () => {
     if (scrollSpacing.value < 0.5) { scrollSpacing.value = 0; _rafDecay = null; return }
-    scrollSpacing.value *= 0.80
+    scrollSpacing.value *= 0.82
     _rafDecay = requestAnimationFrame(decay)
   }
   _rafDecay = requestAnimationFrame(decay)
 }
 
 onMounted(async () => {
-  window.addEventListener('scroll', onScroll, { passive: true })
-
   const [, { data }] = await Promise.all([
     fetchCategories(),
     fetchSettings(),
@@ -79,15 +99,19 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll)
   if (_rafDecay) cancelAnimationFrame(_rafDecay)
+  if (_rafUpdate) cancelAnimationFrame(_rafUpdate)
   document.body.style.backgroundColor = ''
 })
 </script>
 
 <template>
   <!-- flex-col: 푸터가 남은 높이를 채울 수 있도록 -->
-  <div class="min-h-screen flex flex-col" style="background: var(--bg);">
+  <div class="min-h-screen flex flex-col" style="background: var(--bg);"
+    @touchstart.passive="onTouchStart"
+    @touchmove.passive="onTouchMove"
+    @touchend="onTouchEnd"
+  >
 
     <!-- 헤더: w-full로 항상 전체 너비, justify-between으로 좌우 배치 -->
     <header class="w-full px-5 pt-6 pb-4 flex items-center justify-between sm:px-8 sm:pt-8 sm:pb-5">
