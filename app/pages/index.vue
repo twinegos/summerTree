@@ -43,17 +43,27 @@ watchEffect(() => {
 
 // 스크롤(터치) 속도에 따라 카테고리 간격이 실시간으로 변하는 효과
 // Vue reactivity 없이 DOM 직접 조작 — transition 재시작 아티팩트 방지
-let _spacing = 0          // 현재 간격값
-let _targetSpacing = 0   // 목표 간격값
+let _spacing = 0
+let _targetSpacing = 0
 let _lastTouchY = 0
 let _isTouching = false
 let _rafId: number | null = null
+let _navEl: HTMLElement | null = null
 
 function _applySpacing() {
-  document.querySelectorAll<HTMLElement>('.cat-item').forEach(el => {
-    // padding-bottom만 → 텍스트 위치 고정, 아래로만 늘어남 (스크롤 방향과 충돌 없음)
-    el.style.paddingBottom = `${_spacing}px`
+  if (!_navEl) _navEl = document.querySelector<HTMLElement>('nav')
+  const items = Array.from(document.querySelectorAll<HTMLElement>('.cat-item'))
+  const active = _spacing > 0.3
+
+  items.forEach((el, i) => {
+    // 인덱스에 비례한 누적 translateY → GPU 가속, reflow 없음, 모든 카테고리가 다르게 움직임
+    el.style.transform = active ? `translateY(${_spacing * (i + 1) * 0.5}px)` : ''
+    el.style.willChange = active ? 'transform' : ''
   })
+  // 마지막 카테고리가 푸터와 겹치지 않도록 nav 아래에 공간 확보
+  if (_navEl) {
+    _navEl.style.paddingBottom = active ? `${_spacing * items.length * 0.5}px` : ''
+  }
 }
 
 function _tick() {
