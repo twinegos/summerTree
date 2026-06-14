@@ -52,10 +52,20 @@ onMounted(async () => {
   <!-- flex-col: 푸터가 남은 높이를 채울 수 있도록 -->
   <div class="min-h-screen flex flex-col" style="background: var(--bg);">
 
-    <!-- 헤더: 모바일 중앙 480px / PC 풀 와이드 -->
-    <header class="max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 pt-6 pb-4 flex items-center justify-between">
-      <BrandLogo />
-      <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
+    <!-- 헤더 -->
+    <header class="
+      max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between
+      sm:max-w-none sm:px-8 sm:pt-8 sm:grid sm:grid-cols-3 sm:items-center
+    ">
+      <!-- 로고: 모바일 왼쪽 / PC 2열 중앙 -->
+      <div class="sm:col-start-2 sm:flex sm:justify-center sm:items-center">
+        <BrandLogo class="sm:hidden" />
+        <div class="hidden sm:block"><BrandLogo :large="true" /></div>
+      </div>
+      <!-- 장바구니: 모바일 오른쪽 / PC 3열 오른쪽 끝 -->
+      <div class="sm:col-start-3 sm:flex sm:justify-end sm:items-center">
+        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
+      </div>
     </header>
 
     <!-- 히어로: 풀 와이드 -->
