@@ -77,7 +77,7 @@ function _applyFromState() {
 function _animateTo(target: number) {
   gsap.to(_gsapState, {
     spacing: target,
-    duration: 0.5,
+    duration: 0.3,
     ease: 'power2.out',
     overwrite: 'auto',
     onUpdate: _applyFromState,
@@ -106,14 +106,14 @@ function onTouchMove(e: TouchEvent) {
   const dy = y - _lastTouchY
   _lastTouchY = y
 
-  if (Math.abs(dy) < 8) return  // dead zone 확대 — 미세 진동 필터링
+  if (Math.abs(dy) < 5) return
 
   if (dy < 0) {
-    // 위로 스크롤 → 속도에 비례해 간격 증가
+    // 위로 스크롤 → 간격 증가
     _touchMaxSpacing = Math.min(80, _touchMaxSpacing + Math.abs(dy) * 2.5)
   } else {
-    // 아래로 스크롤 → 속도에 비례해 간격 감소 (즉시 0 대신 점진적)
-    _touchMaxSpacing = Math.max(0, _touchMaxSpacing - Math.abs(dy) * 2.5)
+    // 아래로 스크롤 → 간격 감소 (천천히 줄어들도록 배율 낮춤)
+    _touchMaxSpacing = Math.max(0, _touchMaxSpacing - Math.abs(dy) * 1.2)
   }
   _animateTo(_touchMaxSpacing)
 }
