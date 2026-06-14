@@ -46,6 +46,17 @@ onMounted(async () => {
     heroPhrase.value = pickRandom(data.hero_phrases) ?? ''
   }
 })
+
+// 오버스크롤 시 body 배경이 마지막 카테고리 색과 일치하도록
+watchEffect(() => {
+  if (categories.value.length) {
+    document.body.style.backgroundColor = categoryBg(categories.value.length - 1)
+  }
+})
+
+onUnmounted(() => {
+  document.body.style.backgroundColor = ''
+})
 </script>
 
 <template>
@@ -130,9 +141,9 @@ onMounted(async () => {
       </div>
     </nav>
 
-    <!-- 푸터: 마지막 카테고리 색상 + flex-1 + min-h로 overscroll 시 밝은 배경 노출 방지 -->
+    <!-- 푸터: 마지막 카테고리 색상 + flex-1 -->
     <div
-      class="flex-1 min-h-[300px]"
+      class="flex-1"
       :style="`background: ${categories.length ? categoryBg(categories.length - 1) : 'var(--bg)'};`"
     >
       <div class="max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 py-8 flex justify-end" style="border-top: 1px solid rgba(0,0,0,0.2);">
