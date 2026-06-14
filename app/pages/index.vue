@@ -40,9 +40,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- PC: 사이드 레일 어두운 배경 / 모바일: 기본 배경 -->
   <div class="min-h-screen" style="background: var(--bg);">
-    <div class="sm:bg-[#1a2a12] min-h-screen">
 
       <!-- 헤더 -->
       <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
@@ -108,6 +106,5 @@ onMounted(async () => {
         </div>
       </div>
 
-    </div>
   </div>
 </template>
