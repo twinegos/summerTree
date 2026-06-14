@@ -61,19 +61,17 @@ function _applySpacing() {
   }
 
   const active = _spacing > 0.3
+  const gapSize = _spacing * 0.5  // 인접 카테고리 이동 차이 = gap 크기
+
   items.forEach((el, i) => {
     el.style.transform = active ? `translateY(${_spacing * (i + 1) * 0.5}px)` : ''
     el.style.willChange = active ? 'transform' : ''
-    // box-shadow 없음 — 색깔 영역도 텍스트와 함께 이동
+    // 자신 아래 gap을 자신의 색으로 채움 → gap이 항상 바로 위 카테고리 색으로 보임
+    el.style.boxShadow = active ? `0 ${gapSize}px 0 0 ${_catColors[i] ?? ''}` : ''
   })
   if (_navEl) {
     _navEl.style.paddingBottom = active ? `${_spacing * items.length * 0.5}px` : ''
-    // 카테고리가 벌어질 때 생기는 gap에 전체보기(beige) 대신 카테고리 계열 색이 보이도록
-    if (active && _catColors.length >= 2) {
-      _navEl.style.background = `linear-gradient(to bottom, ${_catColors[0]}, ${_catColors[_catColors.length - 1]})`
-    } else {
-      _navEl.style.background = ''
-    }
+    _navEl.style.background = ''
   }
 }
 
