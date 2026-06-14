@@ -62,14 +62,18 @@ function _applySpacing() {
 
   const active = _spacing > 0.3
   items.forEach((el, i) => {
-    const shift = active ? _spacing * (i + 1) * 0.5 : 0
-    el.style.transform = active ? `translateY(${shift}px)` : ''
+    el.style.transform = active ? `translateY(${_spacing * (i + 1) * 0.5}px)` : ''
     el.style.willChange = active ? 'transform' : ''
-    // translateY로 내려간 자리 위에 같은 배경색 box-shadow로 채움 → 전체보기 색 노출 방지
-    el.style.boxShadow = active && shift > 0 ? `0 -${shift}px 0 0 ${_catColors[i] ?? ''}` : ''
+    // box-shadow 없음 — 색깔 영역도 텍스트와 함께 이동
   })
   if (_navEl) {
     _navEl.style.paddingBottom = active ? `${_spacing * items.length * 0.5}px` : ''
+    // 카테고리가 벌어질 때 생기는 gap에 전체보기(beige) 대신 카테고리 계열 색이 보이도록
+    if (active && _catColors.length >= 2) {
+      _navEl.style.background = `linear-gradient(to bottom, ${_catColors[0]}, ${_catColors[_catColors.length - 1]})`
+    } else {
+      _navEl.style.background = ''
+    }
   }
 }
 
