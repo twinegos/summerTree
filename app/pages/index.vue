@@ -132,8 +132,8 @@ onMounted(async () => {
 
       <!-- 푸터: 마지막 카테고리 색상으로 풀 와이드 -->
       <div :style="`background: ${categories.length ? categoryBg(categories.length - 1) : 'var(--bg)'};`">
-        <div class="max-w-[480px] mx-auto px-5 py-8 flex justify-end" style="border-top: 1px solid var(--border);">
-          <NuxtLink to="/admin" class="text-xs" style="color: var(--border);">관리자</NuxtLink>
+        <div class="max-w-[480px] mx-auto px-5 py-8 flex justify-end" style="border-top: 1px solid rgba(0,0,0,0.2);">
+          <NuxtLink to="/admin" class="text-xs" style="color: rgba(0,0,0,0.35);">관리자</NuxtLink>
         </div>
       </div>
 
