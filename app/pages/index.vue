@@ -40,17 +40,19 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!-- PC: 사이드 레일 어두운 배경 / 모바일: 기본 배경 -->
   <div class="min-h-screen" style="background: var(--bg);">
-    <!-- 헤더 -->
-    <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
-      <BrandLogo />
-      <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
-    </header>
+    <div class="sm:bg-[#1a2a12] min-h-screen">
 
-    <div class="max-w-[480px] mx-auto">
-      <!-- 히어로 (배경 이미지 + 텍스트) -->
-      <section class="relative overflow-hidden px-5 pt-[30vh] pb-14">
-        <!-- 배경 이미지 -->
+      <!-- 헤더 -->
+      <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
+        <BrandLogo />
+        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
+      </header>
+
+      <!-- 히어로: 풀 와이드 (max-width 없음) -->
+      <section class="relative overflow-hidden" style="min-height: 55vh;">
+        <!-- 배경 이미지: object-fit cover로 화면 꽉 채움 -->
         <div v-if="heroImage" class="absolute inset-0">
           <img
             :src="heroImage"
@@ -59,8 +61,8 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- 텍스트 콘텐츠 -->
-        <div class="relative z-10">
+        <!-- 텍스트: 중앙 480px 기준 -->
+        <div class="relative z-10 max-w-[480px] mx-auto px-5 pt-[30vh] pb-14">
           <p class="text-xs font-medium tracking-widest uppercase mb-4" style="color: var(--muted);">Plant Shop</p>
           <h1
             class="font-bold leading-[1.1] tracking-tight mb-6"
@@ -75,7 +77,8 @@ onMounted(async () => {
         </div>
       </section>
 
-      <div class="px-5">
+      <!-- 콘텐츠: 중앙 480px, 배경색 유지 -->
+      <div class="max-w-[480px] mx-auto px-5" style="background: var(--bg);">
         <!-- 구분선 -->
         <div class="h-px" style="background: var(--border);" />
 
@@ -104,6 +107,7 @@ onMounted(async () => {
           <NuxtLink to="/admin" class="text-xs" style="color: var(--border);">관리자</NuxtLink>
         </div>
       </div>
+
     </div>
   </div>
 </template>
