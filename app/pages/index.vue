@@ -49,18 +49,25 @@ let _lastTouchY = 0
 let _isTouching = false
 let _rafId: number | null = null
 let _navEl: HTMLElement | null = null
+let _catColors: string[] = []
 
 function _applySpacing() {
   if (!_navEl) _navEl = document.querySelector<HTMLElement>('nav')
   const items = Array.from(document.querySelectorAll<HTMLElement>('.cat-item'))
-  const active = _spacing > 0.3
 
+  // bg 색상 최초 1회 캐시
+  if (!_catColors.length && items.length) {
+    _catColors = items.map(el => getComputedStyle(el).backgroundColor)
+  }
+
+  const active = _spacing > 0.3
   items.forEach((el, i) => {
-    // 인덱스에 비례한 누적 translateY → GPU 가속, reflow 없음, 모든 카테고리가 다르게 움직임
-    el.style.transform = active ? `translateY(${_spacing * (i + 1) * 0.5}px)` : ''
+    const shift = active ? _spacing * (i + 1) * 0.5 : 0
+    el.style.transform = active ? `translateY(${shift}px)` : ''
     el.style.willChange = active ? 'transform' : ''
+    // translateY로 내려간 자리 위에 같은 배경색 box-shadow로 채움 → 전체보기 색 노출 방지
+    el.style.boxShadow = active && shift > 0 ? `0 -${shift}px 0 0 ${_catColors[i] ?? ''}` : ''
   })
-  // 마지막 카테고리가 푸터와 겹치지 않도록 nav 아래에 공간 확보
   if (_navEl) {
     _navEl.style.paddingBottom = active ? `${_spacing * items.length * 0.5}px` : ''
   }
@@ -68,11 +75,11 @@ function _applySpacing() {
 
 function _tick() {
   if (_isTouching) {
-    // 빠르게 목표에 추적, 목표는 자연 감소
-    _spacing = _spacing * 0.2 + _targetSpacing * 0.8
-    _targetSpacing *= 0.72
+    // 느린 lerp → 작은 진동이 즉시 반영되지 않아 부드러움
+    _spacing += (_targetSpacing - _spacing) * 0.12
+    _targetSpacing *= 0.90
   } else {
-    _spacing *= 0.78
+    _spacing *= 0.88
     if (_spacing < 0.5) { _spacing = 0; _applySpacing(); _rafId = null; return }
   }
   _applySpacing()
@@ -90,21 +97,19 @@ function onTouchMove(e: TouchEvent) {
   const dy = y - _lastTouchY
   _lastTouchY = y
 
-  // 실제로 스크롤 가능한 페이지에서만 경계 체크 (짧은 페이지에서 오작동 방지)
+  // dead zone: 4px 미만 미세 진동은 무시
+  if (Math.abs(dy) < 4) return
+
   const scrollY = window.scrollY
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight
   if (maxScroll > 50) {
-    if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) {
-      _targetSpacing *= 0.4
-      return
-    }
+    if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) return
   }
-  _targetSpacing = Math.max(_targetSpacing, Math.min(80, Math.abs(dy) * 6.0))
+  _targetSpacing = Math.max(_targetSpacing, Math.min(80, Math.abs(dy) * 4.0))
 }
 
 function onTouchEnd() {
   _isTouching = false
-  // RAF 루프가 계속 실행되며 자연 decay
 }
 
 onMounted(async () => {
