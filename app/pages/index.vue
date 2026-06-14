@@ -51,18 +51,19 @@ let _rafId: number | null = null
 
 function _applySpacing() {
   document.querySelectorAll<HTMLElement>('.cat-item').forEach(el => {
-    el.style.paddingTop = `${_spacing * 0.5}px`
-    el.style.paddingBottom = `${_spacing * 0.5}px`
+    // padding-bottom만 → 텍스트 위치 고정, 아래로만 늘어남 (스크롤 방향과 충돌 없음)
+    el.style.paddingBottom = `${_spacing}px`
   })
 }
 
 function _tick() {
   if (_isTouching) {
-    _spacing = _spacing * 0.35 + _targetSpacing * 0.65
-    _targetSpacing *= 0.78  // 목표도 자연 감소 → 손가락 속도 줄면 간격도 자연히 줄어듦
+    // 빠르게 목표에 추적, 목표는 자연 감소
+    _spacing = _spacing * 0.2 + _targetSpacing * 0.8
+    _targetSpacing *= 0.72
   } else {
-    _spacing *= 0.80
-    if (_spacing < 0.3) { _spacing = 0; _applySpacing(); _rafId = null; return }
+    _spacing *= 0.78
+    if (_spacing < 0.5) { _spacing = 0; _applySpacing(); _rafId = null; return }
   }
   _applySpacing()
   _rafId = requestAnimationFrame(_tick)
@@ -88,7 +89,7 @@ function onTouchMove(e: TouchEvent) {
       return
     }
   }
-  _targetSpacing = Math.max(_targetSpacing, Math.min(44, Math.abs(dy) * 4.5))
+  _targetSpacing = Math.max(_targetSpacing, Math.min(80, Math.abs(dy) * 6.0))
 }
 
 function onTouchEnd() {
