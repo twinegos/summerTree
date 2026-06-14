@@ -84,54 +84,55 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- 콘텐츠: 중앙 480px, 배경색 유지 -->
-      <div class="max-w-[480px] mx-auto px-5" style="background: var(--bg);">
-        <!-- 구분선 -->
-        <div class="h-px" style="background: var(--border);" />
+      <!-- 구분선 -->
+      <div class="h-px" style="background: var(--border);" />
 
-        <!-- 카테고리 목록 -->
-        <nav class="py-4">
-          <!-- 전체보기: 설명 없는 단순 링크 -->
+      <!-- 카테고리 목록: 풀 와이드, 텍스트만 480px 중앙 정렬 -->
+      <nav>
+        <!-- 전체보기 -->
+        <div style="background: var(--bg);">
           <NuxtLink
             to="/plants"
-            class="block px-4 py-4 text-2xl font-bold tracking-tight transition-colors"
-            style="color: var(--dark); background: var(--bg);"
+            class="block max-w-[480px] mx-auto px-5 py-4 text-2xl font-bold tracking-tight"
+            style="color: var(--dark);"
           >
             전체보기
           </NuxtLink>
+        </div>
 
-          <!-- 카테고리별 아코디언 -->
-          <div
-            v-for="(cat, i) in categories"
-            :key="cat.id"
-            @mouseenter="hoveredId = cat.id"
-            @mouseleave="hoveredId = null"
-            :style="`background: ${categoryBg(i)};`"
+        <!-- 카테고리별 아코디언 -->
+        <div
+          v-for="(cat, i) in categories"
+          :key="cat.id"
+          @mouseenter="hoveredId = cat.id"
+          @mouseleave="hoveredId = null"
+          :style="`background: ${categoryBg(i)};`"
+        >
+          <NuxtLink
+            :to="`/plants?category=${encodeURIComponent(cat.name)}`"
+            class="block max-w-[480px] mx-auto px-5 py-4 text-2xl font-bold tracking-tight"
+            style="color: var(--dark);"
           >
-            <NuxtLink
-              :to="`/plants?category=${encodeURIComponent(cat.name)}`"
-              class="block px-4 py-4 text-2xl font-bold tracking-tight"
-              style="color: var(--dark);"
-            >
-              {{ cat.name }}
-            </NuxtLink>
+            {{ cat.name }}
+          </NuxtLink>
 
-            <!-- 슬라이드 설명 (grid-template-rows 애니메이션) -->
-            <div
-              class="grid transition-all duration-300 ease-in-out"
-              :style="hoveredId === cat.id ? 'grid-template-rows: 1fr;' : 'grid-template-rows: 0fr;'"
-            >
-              <div class="overflow-hidden">
-                <p class="px-4 pb-4 text-sm leading-relaxed" style="color: var(--muted);">
-                  {{ cat.description }}
-                </p>
-              </div>
+          <!-- 슬라이드 설명 -->
+          <div
+            class="grid transition-all duration-300 ease-in-out"
+            :style="hoveredId === cat.id ? 'grid-template-rows: 1fr;' : 'grid-template-rows: 0fr;'"
+          >
+            <div class="overflow-hidden">
+              <p class="max-w-[480px] mx-auto px-5 pb-4 text-sm leading-relaxed" style="color: var(--muted);">
+                {{ cat.description }}
+              </p>
             </div>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <!-- 푸터 -->
-        <div class="py-8 flex justify-end" style="border-top: 1px solid var(--border);">
+      <!-- 푸터: 마지막 카테고리 색상으로 풀 와이드 -->
+      <div :style="`background: ${categories.length ? categoryBg(categories.length - 1) : 'var(--bg)'};`">
+        <div class="max-w-[480px] mx-auto px-5 py-8 flex justify-end" style="border-top: 1px solid var(--border);">
           <NuxtLink to="/admin" class="text-xs" style="color: var(--border);">관리자</NuxtLink>
         </div>
       </div>
