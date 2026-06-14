@@ -100,7 +100,7 @@ onMounted(async () => {
 
     <div class="max-w-[480px] mx-auto px-4 py-4">
       <!-- 액션 버튼 -->
-      <div class="flex gap-2 mb-4">
+      <div class="flex gap-2 mb-3">
         <button
           @click="showCategoryModal = true"
           class="flex-1 py-2.5 text-sm font-medium rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
@@ -114,6 +114,15 @@ onMounted(async () => {
           + 식물 등록
         </NuxtLink>
       </div>
+      <NuxtLink
+        to="/admin/home"
+        class="flex items-center justify-between w-full px-4 py-3 mb-4 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <span>홈 화면 편집</span>
+        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </NuxtLink>
 
       <!-- 카테고리 필터 탭 -->
       <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
