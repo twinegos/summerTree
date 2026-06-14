@@ -43,7 +43,10 @@ onMounted(async () => {
   <div class="min-h-screen" style="background: var(--bg);">
     <!-- 헤더 -->
     <header class="max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
-      <span class="text-lg font-bold tracking-tight" style="color: var(--brand);">summerTree</span>
+      <div style="font-family: 'Nanum Myeongjo', serif; line-height: 1.15;">
+        <div style="font-size: 10px; font-weight: 400; letter-spacing: 0.25em; color: #8a7560; text-transform: uppercase;">plant shop</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--brand);">여름나무</div>
+      </div>
       <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
     </header>
 
