@@ -34,7 +34,38 @@ function pickNextImage(images: string[]): string | null {
   return picked
 }
 
+// 오버스크롤 시 body 배경이 마지막 카테고리 색과 일치하도록
+watchEffect(() => {
+  if (categories.value.length) {
+    document.body.style.backgroundColor = categoryBg(categories.value.length - 1)
+  }
+})
+
+// 스크롤 속도에 따라 카테고리 간격이 실시간으로 늘어나고 줄어드는 효과
+const scrollSpacing = ref(0)
+let _prevScrollY = 0
+let _rafDecay: number | null = null
+
+function onScroll() {
+  const scrollY = window.scrollY
+  const speed = Math.abs(scrollY - _prevScrollY)
+  _prevScrollY = scrollY
+
+  const target = Math.min(28, speed * 0.9)
+  if (target > scrollSpacing.value) scrollSpacing.value = target
+
+  if (_rafDecay) { cancelAnimationFrame(_rafDecay); _rafDecay = null }
+  const decay = () => {
+    if (scrollSpacing.value < 0.5) { scrollSpacing.value = 0; _rafDecay = null; return }
+    scrollSpacing.value *= 0.80
+    _rafDecay = requestAnimationFrame(decay)
+  }
+  _rafDecay = requestAnimationFrame(decay)
+}
+
 onMounted(async () => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+
   const [, { data }] = await Promise.all([
     fetchCategories(),
     fetchSettings(),
@@ -47,40 +78,8 @@ onMounted(async () => {
   }
 })
 
-// 오버스크롤 시 body 배경이 마지막 카테고리 색과 일치하도록
-watchEffect(() => {
-  if (categories.value.length) {
-    document.body.style.backgroundColor = categoryBg(categories.value.length - 1)
-  }
-})
-
-// 드래그 속도에 따라 카테고리 간격이 실시간으로 늘어나고 줄어드는 효과
-const dragSpacing = ref(0)
-let _lastTouchY = 0
-let _rafDecay: number | null = null
-
-function onTouchStart(e: TouchEvent) {
-  _lastTouchY = e.touches[0].clientY
-  if (_rafDecay) { cancelAnimationFrame(_rafDecay); _rafDecay = null }
-}
-
-function onTouchMove(e: TouchEvent) {
-  const y = e.touches[0].clientY
-  const dy = _lastTouchY - y // 양수 = 손가락이 위로 이동 (스크롤 다운)
-  _lastTouchY = y
-  dragSpacing.value = Math.max(0, Math.min(28, dy * 1.4))
-}
-
-function onTouchEnd() {
-  const decay = () => {
-    if (dragSpacing.value < 0.5) { dragSpacing.value = 0; _rafDecay = null; return }
-    dragSpacing.value *= 0.72
-    _rafDecay = requestAnimationFrame(decay)
-  }
-  _rafDecay = requestAnimationFrame(decay)
-}
-
 onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
   if (_rafDecay) cancelAnimationFrame(_rafDecay)
   document.body.style.backgroundColor = ''
 })
@@ -88,11 +87,7 @@ onUnmounted(() => {
 
 <template>
   <!-- flex-col: 푸터가 남은 높이를 채울 수 있도록 -->
-  <div class="min-h-screen flex flex-col" style="background: var(--bg);"
-    @touchstart.passive="onTouchStart"
-    @touchmove.passive="onTouchMove"
-    @touchend="onTouchEnd"
-  >
+  <div class="min-h-screen flex flex-col" style="background: var(--bg);">
 
     <!-- 헤더: w-full로 항상 전체 너비, justify-between으로 좌우 배치 -->
     <header class="w-full px-5 pt-6 pb-4 flex items-center justify-between sm:px-8 sm:pt-8 sm:pb-5">
@@ -148,7 +143,7 @@ onUnmounted(() => {
         :key="cat.id"
         @mouseenter="hoveredId = cat.id"
         @mouseleave="hoveredId = null"
-        :style="`background: ${categoryBg(i)}; padding-bottom: ${dragSpacing}px;`"
+        :style="`background: ${categoryBg(i)}; padding-bottom: ${scrollSpacing}px;`"
       >
         <NuxtLink
           :to="`/plants?category=${encodeURIComponent(cat.name)}`"
