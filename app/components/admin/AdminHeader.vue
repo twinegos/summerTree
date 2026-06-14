@@ -11,7 +11,7 @@ async function handleSignOut() {
   <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
     <div class="max-w-[480px] mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <NuxtLink to="/plants" class="text-lg font-bold text-green-700 hover:opacity-70 transition-opacity">summerTree</NuxtLink>
+        <NuxtLink to="/plants" class="hover:opacity-70 transition-opacity"><BrandLogo /></NuxtLink>
         <nav class="flex gap-1">
           <NuxtLink
             to="/admin"

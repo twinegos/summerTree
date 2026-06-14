@@ -65,7 +65,7 @@ onMounted(async () => {
     <!-- 헤더 -->
     <header class="sticky top-0 z-40 px-5 py-4" style="background: var(--bg); border-bottom: 1px solid var(--border);">
       <div class="max-w-[480px] mx-auto flex items-center justify-between">
-        <NuxtLink to="/" class="text-lg font-bold tracking-tight" style="color: var(--brand);">summerTree</NuxtLink>
+        <NuxtLink to="/"><BrandLogo /></NuxtLink>
         <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">
           장바구니<span v-if="cartCount > 0" class="ml-1 font-bold" style="color: var(--brand);">({{ cartCount }})</span>
         </NuxtLink>
