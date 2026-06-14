@@ -43,14 +43,14 @@ watchEffect(() => {
 
 // 스크롤(터치) 속도에 따라 카테고리 간격이 실시간으로 변하는 효과
 const scrollSpacing = ref(0)
+const isActiveTouch = ref(false)
 let _lastTouchY = 0
 let _pendingTarget = 0
 let _rafUpdate: number | null = null
-let _rafDecay: number | null = null
 
 function onTouchStart(e: TouchEvent) {
   _lastTouchY = e.touches[0].clientY
-  if (_rafDecay) { cancelAnimationFrame(_rafDecay); _rafDecay = null }
+  isActiveTouch.value = true
   if (_rafUpdate) { cancelAnimationFrame(_rafUpdate); _rafUpdate = null }
 }
 
@@ -59,17 +59,16 @@ function onTouchMove(e: TouchEvent) {
   const dy = y - _lastTouchY
   _lastTouchY = y
 
-  // 스크롤 상하 경계에서 오버스크롤 중이면 무시 (화면 떨림 방지)
+  // 상하 경계 오버스크롤 무시 (떨림 방지)
   const scrollY = window.scrollY
   const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
   if ((scrollY <= 0 && dy > 0) || (scrollY >= maxScroll && dy < 0)) return
 
-  _pendingTarget = Math.min(32, Math.abs(dy) * 3.5)
+  _pendingTarget = Math.min(20, Math.abs(dy) * 3.0)
 
   if (!_rafUpdate) {
     _rafUpdate = requestAnimationFrame(() => {
-      // lerp로 부드럽게 이동 (급격한 레이아웃 변화 방지)
-      scrollSpacing.value = scrollSpacing.value * 0.3 + _pendingTarget * 0.7
+      scrollSpacing.value = scrollSpacing.value * 0.5 + _pendingTarget * 0.5
       _rafUpdate = null
     })
   }
@@ -77,12 +76,9 @@ function onTouchMove(e: TouchEvent) {
 
 function onTouchEnd() {
   if (_rafUpdate) { cancelAnimationFrame(_rafUpdate); _rafUpdate = null }
-  const decay = () => {
-    if (scrollSpacing.value < 0.5) { scrollSpacing.value = 0; _rafDecay = null; return }
-    scrollSpacing.value *= 0.82
-    _rafDecay = requestAnimationFrame(decay)
-  }
-  _rafDecay = requestAnimationFrame(decay)
+  isActiveTouch.value = false
+  // CSS transition이 500ms ease-out으로 0까지 부드럽게 복귀
+  scrollSpacing.value = 0
 }
 
 onMounted(async () => {
@@ -99,7 +95,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (_rafDecay) cancelAnimationFrame(_rafDecay)
   if (_rafUpdate) cancelAnimationFrame(_rafUpdate)
   document.body.style.backgroundColor = ''
 })
@@ -167,7 +162,12 @@ onUnmounted(() => {
         :key="cat.id"
         @mouseenter="hoveredId = cat.id"
         @mouseleave="hoveredId = null"
-        :style="`background: ${categoryBg(i)}; padding-bottom: ${scrollSpacing}px;`"
+        :style="`
+          background: ${categoryBg(i)};
+          padding-top: ${scrollSpacing * 0.5}px;
+          padding-bottom: ${scrollSpacing * 0.5}px;
+          transition: padding ${isActiveTouch ? '40ms linear' : '500ms ease-out'};
+        `"
       >
         <NuxtLink
           :to="`/plants?category=${encodeURIComponent(cat.name)}`"
