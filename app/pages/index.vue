@@ -108,12 +108,12 @@ function onTouchMove(e: TouchEvent) {
 
   if (Math.abs(dy) < 4) return
 
-  if (dy > 0) {
-    // 손가락 아래 (위로 스크롤) → 간격 넓어짐
+  if (dy < 0) {
+    // 손가락 위 (위로 스크롤) → 간격 넓어짐
     _touchMaxSpacing = Math.max(_touchMaxSpacing, Math.min(80, Math.abs(dy) * 4.0))
     _animateTo(_touchMaxSpacing)
   } else {
-    // 손가락 위 (아래로 스크롤) → 간격 좁아짐
+    // 손가락 아래 (아래로 스크롤) → 간격 좁아짐
     _touchMaxSpacing = 0
     _animateTo(0)
   }
