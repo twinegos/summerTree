@@ -54,18 +54,20 @@ onMounted(async () => {
 
     <!-- 헤더 -->
     <header class="
+      relative
       max-w-[480px] mx-auto px-5 pt-6 pb-4 flex items-center justify-between
-      sm:max-w-none sm:px-8 sm:pt-8 sm:grid sm:grid-cols-3 sm:items-center
+      sm:max-w-none sm:justify-center sm:pt-8 sm:pb-5
     ">
-      <!-- 로고: 모바일 왼쪽 / PC 2열 중앙 -->
-      <div class="sm:col-start-2 sm:flex sm:justify-center sm:items-center">
-        <BrandLogo class="sm:hidden" />
-        <div class="hidden sm:block"><BrandLogo :large="true" /></div>
-      </div>
-      <!-- 장바구니: 모바일 오른쪽 / PC 3열 오른쪽 끝 -->
-      <div class="sm:col-start-3 sm:flex sm:justify-end sm:items-center">
-        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
-      </div>
+      <!-- 로고: 모바일 왼쪽 / PC 중앙 -->
+      <BrandLogo class="sm:hidden" />
+      <div class="hidden sm:block"><BrandLogo :large="true" /></div>
+
+      <!-- 장바구니: 모바일 오른쪽(flex) / PC 오른쪽 끝(absolute) -->
+      <NuxtLink
+        to="/cart"
+        class="text-sm font-medium sm:absolute sm:right-8 sm:top-1/2 sm:-translate-y-1/2"
+        style="color: var(--muted);"
+      >장바구니</NuxtLink>
     </header>
 
     <!-- 히어로: 풀 와이드 -->
