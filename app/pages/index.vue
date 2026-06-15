@@ -186,11 +186,12 @@ onUnmounted(() => {
       <div class="relative z-10 max-w-[480px] mx-auto sm:max-w-none px-5 sm:px-8 pt-[30vh] pb-14">
         <p class="text-xs font-medium tracking-widest uppercase mb-4" style="color: var(--muted);">Plant Shop</p>
         <h1
+          v-if="heroPhrase"
           class="font-bold leading-[1.1] tracking-tight mb-6"
           :class="heroPhrase.length > 12 ? 'text-4xl' : 'text-5xl'"
           style="color: var(--dark);"
         >
-          {{ heroPhrase || '당신의\n공간에\n초록을.' }}
+          {{ heroPhrase }}
         </h1>
         <p class="text-sm leading-relaxed" style="color: var(--muted);">
           식물과 함께하는 일상.<br />QR 코드로 식물의 이야기를 만나보세요.
