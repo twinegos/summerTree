@@ -61,14 +61,13 @@ function _applyFromState() {
   }
 
   const s = _gsapState.spacing
-  const active = s > 0.3
-  const gapSize = s * 0.5
+  const active = Math.abs(s) > 0.3
 
   items.forEach((el, i) => {
     el.style.transform = active ? `translateY(${s * (i + 1) * 0.5}px)` : ''
-    el.style.boxShadow = active ? `0 ${gapSize}px 0 0 ${_catColors[i] ?? ''}` : ''
+    // box-shadow는 양수(벌어짐)일 때만 — 음수(압축)일 때는 겹침으로 표현
+    el.style.boxShadow = s > 0.3 ? `0 ${s * 0.5}px 0 0 ${_catColors[i] ?? ''}` : ''
   })
-  // 푸터도 transform 이동 — paddingBottom(reflow) 대신 GPU 가속
   if (_footerEl) {
     _footerEl.style.transform = active ? `translateY(${s * items.length * 0.5}px)` : ''
   }
@@ -87,8 +86,8 @@ function _animateTo(target: number) {
 function _decayToZero() {
   gsap.to(_gsapState, {
     spacing: 0,
-    duration: 0.55,
-    ease: 'power2.inOut',
+    duration: 0.45,
+    ease: 'power2.out',  // inOut → out: 멈춤 없이 즉시 시작
     overwrite: true,
     onUpdate: _applyFromState,
     onComplete: _applyFromState,
@@ -98,7 +97,7 @@ function _decayToZero() {
 // ── 모바일 터치 ──
 function onTouchStart(e: TouchEvent) {
   _lastTouchY = e.touches[0].clientY
-  _touchMaxSpacing = 0
+  _touchMaxSpacing = _gsapState.spacing  // 현재 애니메이션 값에서 연속으로 이어받음
 }
 
 function onTouchMove(e: TouchEvent) {
@@ -112,8 +111,8 @@ function onTouchMove(e: TouchEvent) {
     // 위로 스크롤 → 간격 증가
     _touchMaxSpacing = Math.min(80, _touchMaxSpacing + Math.abs(dy) * 2.5)
   } else {
-    // 아래로 스크롤 → 간격 감소 (천천히 줄어들도록 배율 낮춤)
-    _touchMaxSpacing = Math.max(0, _touchMaxSpacing - Math.abs(dy) * 1.2)
+    // 아래로 스크롤 → 간격 감소 (0 이하로도 압축)
+    _touchMaxSpacing = Math.max(-20, _touchMaxSpacing - Math.abs(dy) * 1.2)
   }
   _animateTo(_touchMaxSpacing)
 }
