@@ -40,7 +40,7 @@ const thumbnailStyle = computed(() => {
     <!-- 이미지만 표시 -->
     <div
       class="relative overflow-hidden"
-      style="aspect-ratio: 9/16; background: var(--bg-light);"
+      style="aspect-ratio: 4/5; background: var(--bg-light);"
     >
       <img
         v-if="thumbnailUrl"

@@ -129,8 +129,8 @@ onMounted(load)
         <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
       </div>
 
-      <!-- 이미지 + 오버랩 텍스트 (에디터와 동일 9:16 비율) -->
-      <div class="relative overflow-hidden" style="background: var(--bg-light); aspect-ratio: 9/16; max-height: 672px; width: 100%;">
+      <!-- 이미지 + 오버랩 텍스트 (에디터와 동일 4:5 비율) -->
+      <div class="relative overflow-hidden" style="background: var(--bg-light); aspect-ratio: 4/5; max-height: 672px; width: 100%;">
         <!-- 이미지 갤러리 -->
         <div
           v-if="plant.image_urls.length > 0"

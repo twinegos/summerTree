@@ -161,8 +161,8 @@ const imageStyle = computed(() => {
     -->
     <div
       ref="containerRef"
-      class="relative overflow-hidden rounded-xl border-2 border-dashed select-none w-full"
-      style="aspect-ratio: 9/16; max-height: 360px; border-color: #86efac; touch-action: none; background: #f0f0f0;"
+      class="relative overflow-hidden rounded-xl border-2 border-dashed select-none"
+      style="aspect-ratio: 4/5; max-height: 400px; border-color: #86efac; touch-action: none; background: #f0f0f0;"
       :style="{ cursor: isDragging ? 'grabbing' : 'grab' }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
