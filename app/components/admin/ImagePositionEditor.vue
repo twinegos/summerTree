@@ -189,29 +189,25 @@ const imageStyle = computed(() => {
         </span>
       </div>
 
-      <!-- 하단: 상세페이지 오버레이 프리뷰 (비율·색상 동일하게 구도 확인용) -->
+      <!-- 하단: 상세페이지 오버레이 프리뷰 — 실제 페이지와 동일한 padding/구조 -->
       <div
-        class="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
-        style="background: rgba(232, 234, 216, 0.75); height: 28%;"
+        class="absolute bottom-0 left-0 right-0 pointer-events-none z-10 px-3"
+        style="background: rgba(232, 234, 216, 0.75); padding-top: 40px; padding-bottom: 24px;"
       >
-        <div class="px-3 pt-4 pb-2 space-y-1.5">
-          <!-- 카테고리 라인 -->
-          <div class="h-1.5 rounded opacity-40" style="width: 28%; background: #1c1a14;"></div>
-          <!-- 식물 이름 (굵고 넓게) -->
-          <div class="h-3 rounded opacity-55" style="width: 68%; background: #1c1a14;"></div>
-          <!-- 짧은 설명 -->
-          <div class="space-y-1">
-            <div class="h-1.5 rounded opacity-28" style="width: 95%; background: #1c1a14;"></div>
-            <div class="h-1.5 rounded opacity-28" style="width: 72%; background: #1c1a14;"></div>
-          </div>
-          <!-- 관리 난이도 -->
-          <div class="flex items-center gap-1.5 pt-0.5">
-            <div class="h-1.5 rounded opacity-30" style="width: 22%; background: #1c1a14;"></div>
-            <div class="flex gap-0.5">
-              <div class="w-1.5 h-1.5 rounded-full" style="background: rgba(28,26,20,0.45);"></div>
-              <div class="w-1.5 h-1.5 rounded-full" style="background: rgba(28,26,20,0.45);"></div>
-              <div class="w-1.5 h-1.5 rounded-full" style="background: rgba(28,26,20,0.20);"></div>
-            </div>
+        <!-- 카테고리 (text-xs = 12px) -->
+        <div class="rounded mb-2 opacity-50" style="height: 12px; width: 30%; background: #1c1a14;"></div>
+        <!-- 식물 이름 (text-2xl = 28px) -->
+        <div class="rounded mb-2 opacity-70" style="height: 28px; width: 65%; background: #1c1a14;"></div>
+        <!-- 짧은 설명 (text-sm leading-relaxed ≈ 22px/줄) -->
+        <div class="rounded mb-1 opacity-40" style="height: 16px; width: 90%; background: #1c1a14;"></div>
+        <div class="rounded mb-4 opacity-40" style="height: 16px; width: 70%; background: #1c1a14;"></div>
+        <!-- 관리 난이도 (text-xs = 12px) -->
+        <div class="flex items-center gap-1.5">
+          <div class="rounded opacity-40" style="height: 12px; width: 20%; background: #1c1a14;"></div>
+          <div class="flex gap-1">
+            <div class="w-2.5 h-2.5 rounded-full" style="background: rgba(28,26,20,0.55);"></div>
+            <div class="w-2.5 h-2.5 rounded-full" style="background: rgba(28,26,20,0.55);"></div>
+            <div class="w-2.5 h-2.5 rounded-full" style="background: rgba(28,26,20,0.20);"></div>
           </div>
         </div>
       </div>
