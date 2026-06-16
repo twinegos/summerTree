@@ -72,14 +72,13 @@ onMounted(async () => {
       </div>
     </header>
 
+    <!-- 헤더 컨트롤 (타이틀, 검색, 필터) -->
     <div class="max-w-[480px] mx-auto px-5 pt-6">
-      <!-- 페이지 타이틀 -->
       <div class="mb-6">
         <p class="text-xs font-medium tracking-widest uppercase mb-1" style="color: var(--muted);">Collection</p>
         <h1 class="text-3xl font-bold tracking-tight" style="color: var(--dark);">식물</h1>
       </div>
 
-      <!-- 검색 -->
       <div class="relative mb-4">
         <input
           v-model="searchQuery"
@@ -91,8 +90,7 @@ onMounted(async () => {
         />
       </div>
 
-      <!-- 카테고리 필터 -->
-      <div class="flex gap-4 overflow-x-auto pb-1 mb-6 scrollbar-hide">
+      <div class="flex gap-4 overflow-x-auto pb-1 mb-4 scrollbar-hide">
         <button
           @click="selectCategory(null)"
           class="shrink-0 text-sm font-medium pb-1 transition-colors"
@@ -115,50 +113,49 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- 총 개수 -->
-      <p class="text-xs mb-4" style="color: var(--muted);">{{ total }}개</p>
+      <p class="text-xs mb-2" style="color: var(--muted);">{{ total }}개</p>
+    </div>
 
-      <!-- 로딩 -->
-      <div v-if="isLoading" class="flex justify-center py-16">
-        <div class="w-5 h-5 border border-t-transparent rounded-full animate-spin" style="border-color: var(--muted); border-top-color: transparent;" />
+    <!-- 로딩 -->
+    <div v-if="isLoading" class="flex justify-center py-16">
+      <div class="w-5 h-5 border border-t-transparent rounded-full animate-spin" style="border-color: var(--muted); border-top-color: transparent;" />
+    </div>
+
+    <!-- 빈 상태 -->
+    <div v-else-if="plants.length === 0" class="text-center py-16 text-sm" style="color: var(--muted);">
+      식물이 없습니다
+    </div>
+
+    <!-- 상품 그리드 — 풀 너비, 간격 없음 -->
+    <div v-else>
+      <div class="grid grid-cols-2">
+        <StorePlantCard
+          v-for="plant in plants"
+          :key="plant.id"
+          :plant="plant"
+          :category-name="categoryMap[plant.category_id]"
+        />
       </div>
 
-      <!-- 빈 상태 -->
-      <div v-else-if="plants.length === 0" class="text-center py-16 text-sm" style="color: var(--muted);">
-        식물이 없습니다
-      </div>
-
-      <!-- 상품 그리드 -->
-      <div v-else>
-        <div class="grid grid-cols-2 gap-x-4 gap-y-8">
-          <StorePlantCard
-            v-for="plant in plants"
-            :key="plant.id"
-            :plant="plant"
-            :category-name="categoryMap[plant.category_id]"
-          />
-        </div>
-
-        <!-- 페이지네이션 -->
-        <div v-if="totalPages > 1" class="flex items-center justify-center gap-6 py-10">
-          <button
-            @click="currentPage--; load()"
-            :disabled="currentPage === 1"
-            class="text-sm font-medium disabled:opacity-30"
-            style="color: var(--muted);"
-          >
-            ← 이전
-          </button>
-          <span class="text-xs" style="color: var(--muted);">{{ currentPage }} / {{ totalPages }}</span>
-          <button
-            @click="currentPage++; load()"
-            :disabled="currentPage >= totalPages"
-            class="text-sm font-medium disabled:opacity-30"
-            style="color: var(--muted);"
-          >
-            다음 →
-          </button>
-        </div>
+      <!-- 페이지네이션 -->
+      <div v-if="totalPages > 1" class="flex items-center justify-center gap-6 py-10">
+        <button
+          @click="currentPage--; load()"
+          :disabled="currentPage === 1"
+          class="text-sm font-medium disabled:opacity-30"
+          style="color: var(--muted);"
+        >
+          ← 이전
+        </button>
+        <span class="text-xs" style="color: var(--muted);">{{ currentPage }} / {{ totalPages }}</span>
+        <button
+          @click="currentPage++; load()"
+          :disabled="currentPage >= totalPages"
+          class="text-sm font-medium disabled:opacity-30"
+          style="color: var(--muted);"
+        >
+          다음 →
+        </button>
       </div>
 
       <div class="pb-12" />

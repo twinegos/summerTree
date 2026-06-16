@@ -37,10 +37,10 @@ const thumbnailStyle = computed(() => {
     class="block group"
     style="color: var(--dark);"
   >
-    <!-- 이미지 -->
+    <!-- 이미지만 표시 -->
     <div
-      class="relative overflow-hidden mb-2.5"
-      style="aspect-ratio: 9/16; background: var(--bg-light); border-radius: 4px;"
+      class="relative overflow-hidden"
+      style="aspect-ratio: 9/16; background: var(--bg-light);"
     >
       <img
         v-if="thumbnailUrl"
@@ -53,15 +53,6 @@ const thumbnailStyle = computed(() => {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-      </div>
-    </div>
-    <!-- 정보 -->
-    <div>
-      <p v-if="categoryName" class="text-[11px] font-medium tracking-wide uppercase mb-0.5" style="color: var(--muted);">{{ categoryName }}</p>
-      <p class="text-sm font-semibold leading-snug" style="color: var(--dark);">{{ plant.name }}</p>
-      <div class="flex items-center justify-between mt-1">
-        <p class="text-sm font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
-        <span v-if="plant.stock === 0" class="text-[10px] font-medium px-1.5 py-0.5 rounded" style="background: var(--border); color: var(--muted);">품절</span>
       </div>
     </div>
   </NuxtLink>
