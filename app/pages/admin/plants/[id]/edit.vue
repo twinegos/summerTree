@@ -135,6 +135,16 @@ function validate(): boolean {
   return valid
 }
 
+async function handleSetCover(url: string) {
+  if (existingImageUrls.value[0] === url) return
+  // 선택한 이미지를 배열 맨 앞으로 이동 (image_urls[0] = 대표/썸네일/상세 첫 화면)
+  existingImageUrls.value = [url, ...existingImageUrls.value.filter((u) => u !== url)]
+  await updatePlant(plantId, {
+    image_urls: [...existingImageUrls.value, ...newUploadedUrls.value],
+  })
+  showSuccess('대표 사진으로 설정되었습니다')
+}
+
 async function handleDeleteImage(url: string) {
   isDeletingImage.value = url
   const { error } = await deleteImage(url)
@@ -490,14 +500,34 @@ onMounted(async () => {
 
         <!-- 기존 이미지 목록 -->
         <div v-if="existingImageUrls.length > 0">
-          <label class="block text-sm font-medium text-gray-700 mb-2">등록된 이미지</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            등록된 이미지
+            <span class="text-gray-400 text-xs font-normal">(사진을 눌러 대표로 지정 · 썸네일/상세 첫 화면에 표시)</span>
+          </label>
           <div class="grid grid-cols-3 gap-2">
             <div
-              v-for="url in existingImageUrls"
+              v-for="(url, idx) in existingImageUrls"
               :key="url"
               class="relative aspect-square rounded-xl overflow-hidden bg-gray-100"
+              :class="idx === 0 ? 'ring-2 ring-green-500' : ''"
             >
-              <img :src="url" class="w-full h-full object-cover" />
+              <img
+                :src="url"
+                class="w-full h-full object-cover"
+                :class="idx !== 0 ? 'cursor-pointer' : ''"
+                @click="idx !== 0 && handleSetCover(url)"
+              />
+              <!-- 대표 뱃지 / 대표 설정 -->
+              <span
+                v-if="idx === 0"
+                class="absolute top-1 left-1 bg-green-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded"
+              >대표</span>
+              <button
+                v-else
+                type="button"
+                @click="handleSetCover(url)"
+                class="absolute top-1 left-1 bg-black/50 hover:bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded transition-colors"
+              >대표로</button>
               <button
                 type="button"
                 @click="handleDeleteImage(url)"
