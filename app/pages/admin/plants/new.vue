@@ -8,8 +8,6 @@ const { createPlant, updatePlant } = usePlants()
 const { uploadImage } = useStorage()
 const { showSuccess, showError } = useToast()
 
-const imageUploaderRef = ref<{ getPendingFiles: () => File[]; firstPreviewUrl: string | null } | null>(null)
-
 const form = reactive({
   name: '',
   category_id: '',
@@ -28,8 +26,69 @@ const form = reactive({
   overlay_opacity: 0.75 as number,
 })
 
-const uploadedUrls = ref<string[]>([])
+interface PendingImage {
+  id: string
+  previewUrl: string   // 그리드/에디터 표시용
+  file?: File          // 업로드할 로컬 파일
+  remoteUrl?: string   // 이미 URL인 경우(AI 생성)
+}
+const MAX_IMAGES = 5
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const images = ref<PendingImage[]>([])
+const fileInput = ref<HTMLInputElement | null>(null)
+const isDragging = ref(false)
 const isSubmitting = ref(false)
+
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (input.files) {
+    addFiles(Array.from(input.files))
+    input.value = ''
+  }
+}
+
+function onDrop(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = false
+  addFiles(Array.from(e.dataTransfer?.files ?? []))
+}
+
+function addFiles(files: File[]) {
+  const available = MAX_IMAGES - images.value.length
+  if (available <= 0) {
+    showError(`이미지는 최대 ${MAX_IMAGES}장까지 등록할 수 있습니다`)
+    return
+  }
+  for (const file of files.slice(0, available)) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      showError('jpg, png, webp 형식만 지원합니다')
+      continue
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showError('이미지 크기는 5MB 이하여야 합니다')
+      continue
+    }
+    images.value.push({ id: crypto.randomUUID(), previewUrl: URL.createObjectURL(file), file })
+  }
+}
+
+function removeImage(id: string) {
+  const img = images.value.find((i) => i.id === id)
+  if (img?.file) URL.revokeObjectURL(img.previewUrl)
+  images.value = images.value.filter((i) => i.id !== id)
+}
+
+// 선택한 이미지를 맨 앞(대표)으로 이동 — image_urls[0]이 썸네일/상세 첫 화면
+function setCover(id: string) {
+  const idx = images.value.findIndex((i) => i.id === id)
+  if (idx <= 0) return
+  const [img] = images.value.splice(idx, 1)
+  images.value.unshift(img)
+}
 
 function parseImagePosition(pos: string): { x: number; y: number } {
   const parts = (pos || '0% 0%').split(' ')
@@ -47,10 +106,8 @@ const imageEditorValue = computed({
   },
 })
 
-// 에디터에 표시할 이미지: AI 생성 이미지 우선, 없으면 업로더 첫 미리보기
-const editorImageUrl = computed(() =>
-  uploadedUrls.value[0] || imageUploaderRef.value?.firstPreviewUrl || ''
-)
+// 에디터에 표시할 이미지 = 대표(목록 첫 번째)
+const editorImageUrl = computed(() => images.value[0]?.previewUrl || '')
 
 const errors = reactive({ name: '', category_id: '', price: '', stock: '' })
 
@@ -88,7 +145,12 @@ function handleAiFillFields(fields: Record<string, unknown>) {
 }
 
 function handleAiGenerateImage(imageUrl: string) {
-  uploadedUrls.value = [imageUrl, ...uploadedUrls.value]
+  if (images.value.length >= MAX_IMAGES) {
+    showError(`이미지는 최대 ${MAX_IMAGES}장까지 등록할 수 있습니다`)
+    return
+  }
+  // AI 생성 이미지를 맨 앞(대표)에 추가
+  images.value.unshift({ id: crypto.randomUUID(), previewUrl: imageUrl, remoteUrl: imageUrl })
 }
 
 function validate(): boolean {
@@ -131,17 +193,21 @@ async function handleSubmit() {
     const { data: plant, error: createError } = await createPlant(payload)
     if (createError || !plant) { showError(createError ?? '등록에 실패했습니다'); return }
 
-    const pendingFiles = imageUploaderRef.value?.getPendingFiles() ?? []
-    const newUrls: string[] = []
-    for (const file of pendingFiles) {
-      const { url, error: uploadError } = await uploadImage(plant.id, file)
-      if (uploadError) { showError(uploadError); continue }
-      if (url) newUrls.push(url)
+    // 목록 순서대로 최종 URL 구성 (파일은 업로드, AI 생성 URL은 그대로) → [0]이 대표
+    const finalUrls: string[] = []
+    for (const img of images.value) {
+      if (img.remoteUrl) {
+        finalUrls.push(img.remoteUrl)
+        continue
+      }
+      if (img.file) {
+        const { url, error: uploadError } = await uploadImage(plant.id, img.file)
+        if (uploadError) { showError(uploadError); continue }
+        if (url) finalUrls.push(url)
+      }
     }
-
-    const allUrls = [...uploadedUrls.value, ...newUrls]
-    if (allUrls.length > 0) {
-      await updatePlant(plant.id, { image_urls: allUrls })
+    if (finalUrls.length > 0) {
+      await updatePlant(plant.id, { image_urls: finalUrls })
     }
 
     showSuccess('식물이 등록되었습니다')
@@ -330,10 +396,68 @@ onMounted(() => { fetchCategories() })
           </div>
         </div>
 
-        <!-- 이미지 업로더 -->
+        <!-- 이미지 -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">이미지 <span class="text-gray-400 text-xs">(최대 5장)</span></label>
-          <AdminImageUploader ref="imageUploaderRef" v-model="uploadedUrls" :plant-id="null" />
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            이미지
+            <span class="text-gray-400 text-xs">(최대 5장 · 사진을 눌러 대표 지정)</span>
+          </label>
+          <!-- 드래그앤드롭 / 클릭 선택 -->
+          <div
+            @click="triggerFileInput"
+            @dragover.prevent="isDragging = true"
+            @dragleave="isDragging = false"
+            @drop="onDrop"
+            :class="[
+              'border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors',
+              isDragging ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-green-400 hover:bg-gray-50',
+              images.length >= MAX_IMAGES ? 'pointer-events-none opacity-50' : '',
+            ]"
+          >
+            <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" @change="onFileChange" />
+            <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="text-sm text-gray-500">이미지를 드래그하거나 <span class="text-green-600 font-medium">클릭하여 선택</span></p>
+            <p class="text-xs text-gray-400 mt-1">jpg, png, webp / 최대 5MB / {{ MAX_IMAGES }}장 중 {{ images.length }}장 등록됨</p>
+          </div>
+
+          <!-- 등록될 이미지 목록 (대표 선택) -->
+          <div v-if="images.length > 0" class="grid grid-cols-3 gap-2 mt-3">
+            <div
+              v-for="(img, idx) in images"
+              :key="img.id"
+              class="relative aspect-square rounded-xl overflow-hidden bg-gray-100"
+              :class="idx === 0 ? 'ring-2 ring-green-500' : ''"
+            >
+              <img
+                :src="img.previewUrl"
+                class="w-full h-full object-cover"
+                :class="idx !== 0 ? 'cursor-pointer' : ''"
+                @click="idx !== 0 && setCover(img.id)"
+              />
+              <span
+                v-if="idx === 0"
+                class="absolute top-1 left-1 bg-green-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded"
+              >대표</span>
+              <button
+                v-else
+                type="button"
+                @click="setCover(img.id)"
+                class="absolute top-1 left-1 bg-black/50 hover:bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded transition-colors"
+              >대표로</button>
+              <button
+                type="button"
+                @click="removeImage(img.id)"
+                class="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full w-5 h-5 flex items-center justify-center transition-colors"
+              >
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 이미지 위치/크기 조절 -->
