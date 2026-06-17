@@ -10,7 +10,7 @@ const plantId = route.params.id as string
 
 const { categories, fetchCategories } = useCategories()
 const { updatePlant } = usePlants()
-const { deleteImage, uploadImage } = useStorage()
+const { deleteImage } = useStorage()
 const { showSuccess, showError } = useToast()
 
 // 폼 상태
@@ -34,7 +34,8 @@ const form = reactive({
 
 const existingImageUrls = ref<string[]>([])
 const newUploadedUrls = ref<string[]>([])
-const imageUploaderRef = ref<{ getPendingFiles: () => File[] } | null>(null)
+const imageUploaderRef = ref<{ isUploading: boolean } | null>(null)
+const isImageUploading = computed(() => imageUploaderRef.value?.isUploading ?? false)
 
 const isLoading = ref(true)
 const isSubmitting = ref(false)
@@ -168,20 +169,9 @@ async function handleSubmit() {
   isSubmitting.value = true
 
   try {
-    // 보류 파일 업로드
-    const files = imageUploaderRef.value?.getPendingFiles() ?? []
-    const freshUrls: string[] = []
-
-    for (const file of files) {
-      const { url, error: uploadError } = await uploadImage(plantId, file)
-      if (uploadError) {
-        showError(uploadError)
-        continue
-      }
-      if (url) freshUrls.push(url)
-    }
-
-    const allImageUrls = [...existingImageUrls.value, ...newUploadedUrls.value, ...freshUrls]
+    // 추가한 이미지는 ImageUploader가 즉시 업로드해 newUploadedUrls에 이미 반영됨
+    // (여기서 재업로드하면 같은 사진이 중복 저장되므로 하지 않음)
+    const allImageUrls = [...existingImageUrls.value, ...newUploadedUrls.value]
 
     const payload: PlantUpdate = {
       name: form.name.trim(),
@@ -569,14 +559,14 @@ onMounted(async () => {
           </NuxtLink>
           <button
             type="submit"
-            :disabled="isSubmitting"
+            :disabled="isSubmitting || isImageUploading"
             class="flex-1 py-3 text-sm font-medium bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-xl transition-colors flex items-center justify-center gap-2"
           >
-            <svg v-if="isSubmitting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg v-if="isSubmitting || isImageUploading" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            {{ isSubmitting ? '저장 중...' : '저장' }}
+            {{ isImageUploading ? '이미지 업로드 중...' : isSubmitting ? '저장 중...' : '저장' }}
           </button>
         </div>
       </form>

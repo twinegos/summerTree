@@ -112,10 +112,13 @@ watch(
 
 // 외부에서 로컬 파일 접근용 (새 식물 등록 시 plantId 없이 파일만 보관)
 // firstPreviewUrl: 등록 전 첫 이미지 미리보기 URL (위치/크기 에디터용)
+// isUploading: 즉시 업로드 진행 중 여부 (수정 페이지에서 저장 중복 방지)
 const firstPreviewUrl = computed(() => previews.value[0]?.localUrl ?? null)
+const isUploading = computed(() => previews.value.some((p) => p.uploading))
 defineExpose({
   getPendingFiles: () => previews.value.map((p) => p.file),
   firstPreviewUrl,
+  isUploading,
 })
 </script>
 
