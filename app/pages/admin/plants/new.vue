@@ -8,7 +8,7 @@ const { createPlant, updatePlant } = usePlants()
 const { uploadImage } = useStorage()
 const { showSuccess, showError } = useToast()
 
-const imageUploaderRef = ref<{ getPendingFiles: () => File[] } | null>(null)
+const imageUploaderRef = ref<{ getPendingFiles: () => File[]; firstPreviewUrl: string | null } | null>(null)
 
 const form = reactive({
   name: '',
@@ -23,10 +23,34 @@ const form = reactive({
   page_bg_color: '' as string,
   page_bg_image: '' as string,
   page_font: 'sans' as 'sans' | 'serif' | 'mono',
+  image_position: '0% 0%' as string,
+  image_scale: 1.0 as number,
+  overlay_opacity: 0.75 as number,
 })
 
 const uploadedUrls = ref<string[]>([])
 const isSubmitting = ref(false)
+
+function parseImagePosition(pos: string): { x: number; y: number } {
+  const parts = (pos || '0% 0%').split(' ')
+  return { x: parseFloat(parts[0]) || 0, y: parseFloat(parts[1]) || 0 }
+}
+
+const imageEditorValue = computed({
+  get() {
+    const { x, y } = parseImagePosition(form.image_position)
+    return { x, y, scale: form.image_scale }
+  },
+  set(val: { x: number; y: number; scale: number }) {
+    form.image_position = `${val.x.toFixed(2)}% ${val.y.toFixed(2)}%`
+    form.image_scale = val.scale
+  },
+})
+
+// 에디터에 표시할 이미지: AI 생성 이미지 우선, 없으면 업로더 첫 미리보기
+const editorImageUrl = computed(() =>
+  uploadedUrls.value[0] || imageUploaderRef.value?.firstPreviewUrl || ''
+)
 
 const errors = reactive({ name: '', category_id: '', price: '', stock: '' })
 
@@ -98,6 +122,9 @@ async function handleSubmit() {
       page_bg_color: form.page_bg_color.trim() || null,
       page_bg_image: form.page_bg_image.trim() || null,
       page_font: form.page_font,
+      image_position: form.image_position,
+      image_scale: form.image_scale,
+      overlay_opacity: form.overlay_opacity,
       image_urls: [],
     }
 
@@ -307,6 +334,22 @@ onMounted(() => { fetchCategories() })
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">이미지 <span class="text-gray-400 text-xs">(최대 5장)</span></label>
           <AdminImageUploader ref="imageUploaderRef" v-model="uploadedUrls" :plant-id="null" />
+        </div>
+
+        <!-- 이미지 위치/크기 조절 -->
+        <div class="rounded-xl border border-gray-200 p-4 space-y-3">
+          <div>
+            <p class="text-sm font-semibold text-gray-700">이미지 위치 · 크기</p>
+            <p class="text-xs text-gray-400 mt-0.5">상세 페이지 hero 및 식물 목록 썸네일에 적용됩니다</p>
+          </div>
+          <div v-if="editorImageUrl">
+            <AdminImagePositionEditor
+              v-model="imageEditorValue"
+              v-model:overlayOpacity="form.overlay_opacity"
+              :image-url="editorImageUrl"
+            />
+          </div>
+          <p v-else class="text-xs text-gray-400 py-2">이미지를 먼저 등록해주세요</p>
         </div>
 
         <!-- 버튼 -->

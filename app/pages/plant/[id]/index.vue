@@ -31,7 +31,7 @@ const heroImageStyle = computed(() => {
     position: 'absolute' as const,
     width: '100%',
     height: '100%',
-    objectFit: (s < 1 ? 'contain' : 'cover') as 'contain' | 'cover',
+    objectFit: 'cover' as const,
     objectPosition: '50% 50%',
     transformOrigin: '50% 50%',
     transform: `translate(${x}%, ${y}%) scale(${s})`,

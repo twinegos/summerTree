@@ -111,8 +111,11 @@ watch(
 )
 
 // 외부에서 로컬 파일 접근용 (새 식물 등록 시 plantId 없이 파일만 보관)
+// firstPreviewUrl: 등록 전 첫 이미지 미리보기 URL (위치/크기 에디터용)
+const firstPreviewUrl = computed(() => previews.value[0]?.localUrl ?? null)
 defineExpose({
   getPendingFiles: () => previews.value.map((p) => p.file),
+  firstPreviewUrl,
 })
 </script>
 
