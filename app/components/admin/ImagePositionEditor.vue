@@ -9,10 +9,12 @@ interface EditorValue {
 const props = defineProps<{
   imageUrl: string
   modelValue: EditorValue
+  overlayOpacity: number
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: EditorValue]
+  'update:overlayOpacity': [value: number]
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
@@ -20,7 +22,6 @@ const isDragging = ref(false)
 const isTouchDevice = ref(false)
 const isHovered = ref(false)
 
-const overlayOpacity = ref(0.75)
 const snapEnabled = ref(false)
 
 function snapToGrid(v: number) {
@@ -199,7 +200,7 @@ const imageStyle = computed(() => {
       <!-- 하단: 상세페이지 오버레이 영역 표시 -->
       <div
         class="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
-        :style="{ background: `rgba(232, 234, 216, ${overlayOpacity})`, height: '38%' }"
+        :style="{ background: `rgba(232, 234, 216, ${props.overlayOpacity})`, height: '38%' }"
       />
 
       <!-- PC 전용: hover 시 4모서리 스케일 핸들 -->
@@ -244,10 +245,11 @@ const imageStyle = computed(() => {
         min="0"
         max="1"
         step="0.05"
-        v-model.number="overlayOpacity"
+        :value="props.overlayOpacity"
+        @input="emit('update:overlayOpacity', parseFloat(($event.target as HTMLInputElement).value))"
         class="flex-1 h-1 accent-green-600 cursor-pointer"
       />
-      <span class="text-xs text-gray-400 shrink-0 w-8 text-right">{{ Math.round(overlayOpacity * 100) }}%</span>
+      <span class="text-xs text-gray-400 shrink-0 w-8 text-right">{{ Math.round(props.overlayOpacity * 100) }}%</span>
     </div>
 
     <!-- 스냅 체크박스 -->

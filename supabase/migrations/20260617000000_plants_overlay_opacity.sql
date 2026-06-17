@@ -1,0 +1,2 @@
+ALTER TABLE plants
+  ADD COLUMN IF NOT EXISTS overlay_opacity numeric NOT NULL DEFAULT 0.75;

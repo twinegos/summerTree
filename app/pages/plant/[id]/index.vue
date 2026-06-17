@@ -162,7 +162,7 @@ onMounted(load)
         <!-- 텍스트 오버레이 (하단) — height: 38%로 고정, 에디터 프리뷰와 동일 비율 -->
         <div
           class="absolute bottom-0 left-0 right-0 px-5 pb-6 flex flex-col justify-end"
-          style="background: rgba(232, 234, 216, 0.75); height: 38%;"
+          :style="{ background: `rgba(232, 234, 216, ${plant.overlay_opacity ?? 0.75})`, height: '38%' }"
         >
           <!-- 점 인디케이터 -->
           <div v-if="plant.image_urls.length > 1" class="flex justify-center gap-1.5 mb-4">

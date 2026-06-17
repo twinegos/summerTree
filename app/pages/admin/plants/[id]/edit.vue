@@ -29,6 +29,7 @@ const form = reactive({
   page_font: 'sans' as 'sans' | 'serif' | 'mono',
   image_position: '0% 0%' as string,
   image_scale: 1.0 as number,
+  overlay_opacity: 0.75 as number,
 })
 
 const existingImageUrls = ref<string[]>([])
@@ -187,6 +188,7 @@ async function handleSubmit() {
       page_font: form.page_font,
       image_position: form.image_position,
       image_scale: form.image_scale,
+      overlay_opacity: form.overlay_opacity,
       image_urls: allImageUrls,
     }
 
@@ -234,6 +236,7 @@ onMounted(async () => {
   form.page_font = (plant.page_font as 'sans' | 'serif' | 'mono') ?? 'sans'
   form.image_position = plant.image_position ?? '50% 50%'
   form.image_scale = plant.image_scale ?? 1.0
+  form.overlay_opacity = plant.overlay_opacity ?? 0.75
   existingImageUrls.value = [...plant.image_urls]
 
   isLoading.value = false
@@ -413,6 +416,7 @@ onMounted(async () => {
           <div v-if="existingImageUrls.length > 0 || newUploadedUrls.length > 0">
             <AdminImagePositionEditor
               v-model="imageEditorValue"
+              v-model:overlayOpacity="form.overlay_opacity"
               :image-url="existingImageUrls[0] || newUploadedUrls[0]"
             />
           </div>

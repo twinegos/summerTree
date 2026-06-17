@@ -55,6 +55,7 @@ export type Database = {
           page_font: 'sans' | 'serif' | 'mono'
           image_position: string
           image_scale: number
+          overlay_opacity: number
           price: number
           stock: number
           image_urls: string[]
@@ -76,6 +77,7 @@ export type Database = {
           page_font?: 'sans' | 'serif' | 'mono'
           image_position?: string
           image_scale?: number
+          overlay_opacity?: number
           price: number
           stock?: number
           image_urls?: string[]
@@ -96,6 +98,7 @@ export type Database = {
           page_font?: 'sans' | 'serif' | 'mono'
           image_position?: string
           image_scale?: number
+          overlay_opacity?: number
           price?: number
           stock?: number
           image_urls?: string[]
