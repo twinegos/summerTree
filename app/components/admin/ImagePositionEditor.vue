@@ -20,6 +20,13 @@ const isDragging = ref(false)
 const isTouchDevice = ref(false)
 const isHovered = ref(false)
 
+const overlayOpacity = ref(0.75)
+const snapEnabled = ref(false)
+
+function snapToGrid(v: number) {
+  return snapEnabled.value ? Math.round(v / 5) * 5 : v
+}
+
 const activePointers = new Map<number, { x: number; y: number }>()
 let pinchStartDist = 0
 let pinchStartScale = 1.0
@@ -33,7 +40,7 @@ function clamp(v: number, lo: number, hi: number) {
 }
 
 function emitValue(x: number, y: number, scale: number) {
-  emit('update:modelValue', { x, y, scale: clamp(scale, 0.1, 5.0) })
+  emit('update:modelValue', { x: snapToGrid(x), y: snapToGrid(y), scale: clamp(scale, 0.1, 5.0) })
 }
 
 function pinchDist() {
@@ -189,10 +196,10 @@ const imageStyle = computed(() => {
         </span>
       </div>
 
-      <!-- 하단: 상세페이지 오버레이 영역 표시 — % 기반으로 컨테이너와 함께 스케일 -->
+      <!-- 하단: 상세페이지 오버레이 영역 표시 -->
       <div
         class="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
-        style="background: rgba(232, 234, 216, 0.75); height: 38%;"
+        :style="{ background: `rgba(232, 234, 216, ${overlayOpacity})`, height: '38%' }"
       />
 
       <!-- PC 전용: hover 시 4모서리 스케일 핸들 -->
@@ -227,6 +234,31 @@ const imageStyle = computed(() => {
       >
         초기화
       </button>
+    </div>
+
+    <!-- 오버레이 투명도 슬라이더 -->
+    <div class="flex items-center gap-2 px-0.5">
+      <span class="text-xs text-gray-400 shrink-0 w-16">오버레이</span>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        v-model.number="overlayOpacity"
+        class="flex-1 h-1 accent-green-600 cursor-pointer"
+      />
+      <span class="text-xs text-gray-400 shrink-0 w-8 text-right">{{ Math.round(overlayOpacity * 100) }}%</span>
+    </div>
+
+    <!-- 스냅 체크박스 -->
+    <div class="flex items-center gap-2 px-0.5">
+      <input
+        type="checkbox"
+        id="snap-toggle"
+        v-model="snapEnabled"
+        class="cursor-pointer accent-green-600"
+      />
+      <label for="snap-toggle" class="text-xs text-gray-400 cursor-pointer select-none">스냅 (5% 격자)</label>
     </div>
   </div>
 </template>
