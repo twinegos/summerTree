@@ -46,6 +46,8 @@ watchEffect(() => {
 import gsap from 'gsap'
 
 const _gsapState = { spacing: 0 }
+let _lastTouchY = 0
+let _touchMaxSpacing = 0
 let _catColors: string[] = []
 let _footerEl: HTMLElement | null = null
 let _wheelTimer: ReturnType<typeof setTimeout> | null = null
@@ -92,8 +94,33 @@ function _decayToZero() {
   })
 }
 
-// 모바일 터치 간격 효과는 오버스크롤(바운스)과 충돌해 화면 떨림을 유발하므로 비활성화.
-// PC 마우스 휠/트랙패드에서만 간격 효과를 적용한다.
+// ── 모바일 터치 ──
+function onTouchStart(e: TouchEvent) {
+  _lastTouchY = e.touches[0].clientY
+  _touchMaxSpacing = _gsapState.spacing  // 현재 애니메이션 값에서 연속으로 이어받음
+}
+
+function onTouchMove(e: TouchEvent) {
+  const y = e.touches[0].clientY
+  const dy = y - _lastTouchY
+  _lastTouchY = y
+
+  if (Math.abs(dy) < 5) return
+
+  if (dy < 0) {
+    // 위로 스크롤 → 간격 증가
+    _touchMaxSpacing = Math.min(80, _touchMaxSpacing + Math.abs(dy) * 2.5)
+  } else {
+    // 아래로 스크롤 → 간격 감소 (0 이하로도 압축)
+    _touchMaxSpacing = Math.max(-20, _touchMaxSpacing - Math.abs(dy) * 1.2)
+  }
+  _animateTo(_touchMaxSpacing)
+}
+
+function onTouchEnd() {
+  _decayToZero()
+  _touchMaxSpacing = 0
+}
 
 // ── PC 마우스 휠 / 트랙패드 ──
 function onWheel(e: WheelEvent) {
@@ -132,7 +159,15 @@ onUnmounted(() => {
 
 <template>
   <!-- flex-col: 푸터가 남은 높이를 채울 수 있도록 -->
-  <div class="min-h-screen flex flex-col" style="background: var(--bg);"
+  <!--
+    내부 스크롤 컨테이너(height:100dvh + overflow-y:auto + overscroll-behavior-y:none)로
+    iOS 문서 바운스를 억제 → 페이지 끝에서 부딪힐 때 생기던 떨림 제거.
+    간격 애니메이션은 델타 기반이라 그대로 동작한다.
+  -->
+  <div class="flex flex-col" style="background: var(--bg); height: 100dvh; overflow-y: auto; overscroll-behavior-y: none; -webkit-overflow-scrolling: touch;"
+    @touchstart.passive="onTouchStart"
+    @touchmove.passive="onTouchMove"
+    @touchend="onTouchEnd"
     @wheel.passive="onWheel"
   >
 
