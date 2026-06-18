@@ -107,6 +107,10 @@ function onTouchMove(e: TouchEvent) {
 
   if (Math.abs(dy) < 5) return
 
+  // 페이지 최상단에서 위로 더 당기는 오버스크롤(바운스) 구간에서는
+  // 간격 효과를 적용하지 않아 화면 떨림을 방지
+  if (window.scrollY <= 0 && dy < 0) return
+
   if (dy < 0) {
     // 위로 스크롤 → 간격 증가
     _touchMaxSpacing = Math.min(80, _touchMaxSpacing + Math.abs(dy) * 2.5)
