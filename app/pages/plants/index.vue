@@ -63,7 +63,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col" style="height: 100dvh; background: var(--bg);">
+  <div class="flex flex-col" style="height: 100dvh; overflow: hidden; background: var(--bg);">
     <CommonToast />
 
     <!-- 헤더 -->
@@ -127,7 +127,7 @@ onMounted(async () => {
     <template v-else>
       <div class="flex-1 flex min-h-0">
         <!-- 왼쪽 열 -->
-        <div class="w-1/2 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+        <div class="w-1/2 h-full min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
           <StorePlantCard
             v-for="plant in leftColumn"
             :key="plant.id"
@@ -136,7 +136,7 @@ onMounted(async () => {
           />
         </div>
         <!-- 오른쪽 열 -->
-        <div class="w-1/2 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+        <div class="w-1/2 h-full min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
           <StorePlantCard
             v-for="plant in rightColumn"
             :key="plant.id"
