@@ -63,11 +63,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col" style="height: 100dvh; overflow: hidden; background: var(--bg);">
+  <div class="fixed inset-0 flex flex-col overflow-hidden" style="background: var(--bg);">
     <CommonToast />
 
     <!-- 헤더 -->
-    <header class="sticky top-0 z-40 px-5 py-4" style="background: var(--bg); border-bottom: 1px solid var(--border);">
+    <header class="shrink-0 px-5 py-4" style="background: var(--bg); border-bottom: 1px solid var(--border);">
       <div class="max-w-[480px] mx-auto flex items-center justify-between">
         <NuxtLink to="/"><BrandLogo /></NuxtLink>
         <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">
@@ -77,7 +77,7 @@ onMounted(async () => {
     </header>
 
     <!-- 헤더 컨트롤 (검색, 필터) — 콤팩트 -->
-    <div class="max-w-[480px] mx-auto px-5 pt-3">
+    <div class="shrink-0 max-w-[480px] mx-auto w-full px-5 pt-3">
       <div class="relative mb-2">
         <input
           v-model="searchQuery"
@@ -125,9 +125,9 @@ onMounted(async () => {
 
     <!-- 상품 그리드 — 두 열을 각각 독립 스크롤 -->
     <template v-else>
-      <div class="flex-1 flex min-h-0">
+      <div class="flex-1 grid grid-cols-2 min-h-0">
         <!-- 왼쪽 열 -->
-        <div class="w-1/2 h-full min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+        <div class="min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
           <StorePlantCard
             v-for="plant in leftColumn"
             :key="plant.id"
@@ -136,7 +136,7 @@ onMounted(async () => {
           />
         </div>
         <!-- 오른쪽 열 -->
-        <div class="w-1/2 h-full min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+        <div class="min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
           <StorePlantCard
             v-for="plant in rightColumn"
             :key="plant.id"
