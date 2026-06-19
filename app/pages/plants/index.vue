@@ -76,25 +76,20 @@ onMounted(async () => {
       </div>
     </header>
 
-    <!-- 헤더 컨트롤 (타이틀, 검색, 필터) -->
-    <div class="max-w-[480px] mx-auto px-5 pt-6">
-      <div class="mb-6">
-        <p class="text-xs font-medium tracking-widest uppercase mb-1" style="color: var(--muted);">Collection</p>
-        <h1 class="text-3xl font-bold tracking-tight" style="color: var(--dark);">식물</h1>
-      </div>
-
-      <div class="relative mb-4">
+    <!-- 헤더 컨트롤 (검색, 필터) — 콤팩트 -->
+    <div class="max-w-[480px] mx-auto px-5 pt-3">
+      <div class="relative mb-2">
         <input
           v-model="searchQuery"
           @input="onSearchInput"
           type="text"
           placeholder="식물 이름 검색"
-          class="w-full px-4 py-2.5 text-sm focus:outline-none"
+          class="w-full px-4 py-2 text-sm focus:outline-none"
           style="background: var(--bg-light); border: 1px solid var(--border); border-radius: 4px; color: var(--dark);"
         />
       </div>
 
-      <div class="flex gap-4 overflow-x-auto pb-1 mb-4 scrollbar-hide">
+      <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         <button
           @click="selectCategory(null)"
           class="shrink-0 text-sm font-medium pb-1 transition-colors"
@@ -116,8 +111,6 @@ onMounted(async () => {
           {{ cat.name }}
         </button>
       </div>
-
-      <p class="text-xs mb-2" style="color: var(--muted);">{{ total }}개</p>
     </div>
 
     <!-- 로딩 -->
