@@ -125,9 +125,9 @@ onMounted(async () => {
 
     <!-- 상품 그리드 — 두 열을 각각 독립 스크롤 -->
     <template v-else>
-      <div class="flex-1 grid grid-cols-2 min-h-0">
-        <!-- 왼쪽 열 -->
-        <div class="min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+      <div class="flex-1 relative min-h-0">
+        <!-- 왼쪽 열 — absolute로 높이 확정(iOS flexbox 스크롤 이슈 회피) -->
+        <div class="absolute inset-y-0 left-0 w-1/2 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
           <StorePlantCard
             v-for="plant in leftColumn"
             :key="plant.id"
@@ -136,7 +136,7 @@ onMounted(async () => {
           />
         </div>
         <!-- 오른쪽 열 -->
-        <div class="min-h-0 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
+        <div class="absolute inset-y-0 right-0 w-1/2 overflow-y-auto" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
           <StorePlantCard
             v-for="plant in rightColumn"
             :key="plant.id"
