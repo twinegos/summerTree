@@ -17,6 +17,7 @@ const form = reactive({
   description: '',
   care_guide: '',
   caution: '',
+  care_info: Object.fromEntries(CARE_ITEMS.map((i) => [i.key, ''])) as Record<string, string>,
   care_level: 'normal' as 'easy' | 'normal' | 'hard',
   page_bg_color: '' as string,
   page_bg_image: '' as string,
@@ -129,6 +130,24 @@ function handleAiStylePage(style: { bg_color?: string; bg_image_url?: string; fo
   }
 }
 
+const isGeneratingCare = ref(false)
+async function handleGenerateCareInfo() {
+  if (!form.name.trim()) { showError('식물 이름을 먼저 입력해주세요'); return }
+  isGeneratingCare.value = true
+  try {
+    const res = await $fetch<{ careInfo: Record<string, string> }>('/api/admin/ai/care-info', {
+      method: 'POST',
+      body: { name: form.name, category: categories.value.find((c) => c.id === form.category_id)?.name },
+    })
+    form.care_info = { ...form.care_info, ...res.careInfo }
+    showSuccess('AI가 항목을 채웠어요. 내용을 확인·수정해주세요!')
+  } catch {
+    showError('AI 자동 작성에 실패했습니다')
+  } finally {
+    isGeneratingCare.value = false
+  }
+}
+
 function handleAiFillFields(fields: Record<string, unknown>) {
   if (fields.name) form.name = String(fields.name)
   if (fields.short_description) form.short_description = String(fields.short_description)
@@ -180,6 +199,7 @@ async function handleSubmit() {
       description: form.description.trim() || null,
       care_guide: form.care_guide.trim() || null,
       caution: form.caution.trim() || null,
+      care_info: Object.fromEntries(Object.entries(form.care_info).filter(([, v]) => v.trim())),
       care_level: form.care_level,
       page_bg_color: form.page_bg_color.trim() || null,
       page_bg_image: form.page_bg_image.trim() || null,
@@ -309,26 +329,30 @@ onMounted(() => { fetchCategories() })
           </div>
         </div>
 
-        <!-- 상세 설명 -->
+        <!-- 소개 -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">상세 설명</label>
-          <textarea v-model="form.description" rows="4" maxlength="2000" placeholder="상세 설명을 입력해주세요 (선택)"
-            class="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
-          <p class="text-xs text-gray-400 mt-1 text-right">{{ form.description.length }} / 2000</p>
-        </div>
-
-        <!-- 키우는 방법 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">키우는 방법</label>
-          <textarea v-model="form.care_guide" rows="3" placeholder="키우는 방법을 입력해주세요 (선택)"
+          <label class="block text-sm font-medium text-gray-700 mb-1">소개</label>
+          <textarea v-model="form.description" rows="3" maxlength="2000" placeholder="식물을 짧게 소개해주세요 (선택)"
             class="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
         </div>
 
-        <!-- 주의사항 -->
+        <!-- 식물 정보 (항목별) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">주의사항</label>
-          <textarea v-model="form.caution" rows="3" placeholder="주의사항을 입력해주세요 (선택)"
-            class="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-gray-700">식물 정보 (항목별)</label>
+            <button type="button" @click="handleGenerateCareInfo" :disabled="isGeneratingCare"
+              class="text-xs font-medium text-green-600 hover:text-green-700 disabled:opacity-50">
+              {{ isGeneratingCare ? 'AI 작성 중...' : '✨ AI 자동 작성' }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mb-2">식물 이름을 넣고 'AI 자동 작성'을 누르면 항목이 채워져요. 자유롭게 수정하세요.</p>
+          <div class="space-y-2">
+            <div v-for="item in CARE_ITEMS" :key="item.key">
+              <label class="block text-xs text-gray-500 mb-1">{{ item.icon }} {{ item.label }}</label>
+              <textarea v-model="form.care_info[item.key]" rows="2" :placeholder="item.placeholder"
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+            </div>
+          </div>
         </div>
 
         <!-- 페이지 스타일 -->

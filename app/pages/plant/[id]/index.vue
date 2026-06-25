@@ -68,13 +68,12 @@ const careLevelConfig = computed(() => {
   return { label: '보통', color: '#6B5B1A', bg: '#F5EDCC', dots: 2 }
 })
 
-const sections = computed(() => {
-  if (!plant.value) return []
-  const list = []
-  if (plant.value.description) list.push({ key: 'detail', label: '상세 설명' })
-  if (plant.value.care_guide) list.push({ key: 'care', label: '키우는 방법' })
-  if (plant.value.caution) list.push({ key: 'caution', label: '주의사항' })
-  return list
+// 항목별 정보 (값이 있는 항목만, CARE_ITEMS 순서대로)
+const careInfoList = computed(() => {
+  const info = plant.value?.care_info ?? {}
+  return CARE_ITEMS
+    .filter((item) => info[item.key]?.trim())
+    .map((item) => ({ ...item, content: info[item.key] }))
 })
 
 async function load() {
@@ -207,23 +206,25 @@ onMounted(load)
         </div>
       </div>
 
-      <!-- 섹션 내비게이션 -->
-      <div v-if="sections.length > 0" style="border-top: 1px solid var(--border);">
-        <NuxtLink
-          v-for="section in sections"
-          :key="section.key"
-          :to="`/plant/${plant.id}/${section.key}`"
-          class="flex items-center justify-between px-5 py-5 transition-colors"
+      <!-- 소개 -->
+      <div v-if="plant.description" class="px-5 py-5" style="border-top: 1px solid var(--border);">
+        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.85;">{{ plant.description }}</p>
+      </div>
+
+      <!-- 항목별 정보 카드 -->
+      <div v-if="careInfoList.length > 0" :style="{ borderTop: plant.description ? 'none' : '1px solid var(--border)' }">
+        <div
+          v-for="item in careInfoList"
+          :key="item.key"
+          class="px-5 py-4 flex items-start gap-3"
           style="border-bottom: 1px solid var(--border);"
-          :style="{ background: 'transparent' }"
-          @mouseenter="($event.currentTarget as HTMLElement).style.background = 'var(--bg-light)'"
-          @mouseleave="($event.currentTarget as HTMLElement).style.background = 'transparent'"
         >
-          <span class="text-lg font-semibold tracking-tight" style="color: var(--dark);">{{ section.label }}</span>
-          <svg class="w-5 h-5 shrink-0" style="color: var(--muted);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
-          </svg>
-        </NuxtLink>
+          <span class="text-xl shrink-0 leading-none mt-0.5">{{ item.icon }}</span>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold mb-1" style="color: var(--dark);">{{ item.label }}</p>
+            <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.8;">{{ item.content }}</p>
+          </div>
+        </div>
       </div>
     </div>
 
