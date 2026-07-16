@@ -33,3 +33,4 @@ logs
 .pwtmp
 .devtmp
 .buildtmp
+.devtmp2
