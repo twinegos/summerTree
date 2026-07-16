@@ -100,7 +100,39 @@ async function handleAddToCart() {
   else showSuccess('장바구니에 담겼습니다')
 }
 
-onMounted(load)
+// 스크롤 시 나타나는 반투명 미니 헤더
+const showMini = ref(false)
+function onScroll() {
+  showMini.value = window.scrollY > window.innerHeight * 0.42
+}
+
+// 돌봄 가이드 항목 스크롤 리빌
+let io: IntersectionObserver | null = null
+function setupReveal() {
+  const rows = document.querySelectorAll<HTMLElement>('.care-row')
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduce || !('IntersectionObserver' in window)) {
+    rows.forEach((r) => r.classList.add('in'))
+    return
+  }
+  io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io!.unobserve(e.target) }
+    })
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' })
+  rows.forEach((r) => io!.observe(r))
+}
+
+onMounted(async () => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  await load()
+  await nextTick()
+  setupReveal()
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  io?.disconnect()
+})
 </script>
 
 <template>
@@ -120,128 +152,96 @@ onMounted(load)
     </div>
 
     <!-- 상품 상세 -->
-    <div v-else-if="plant" class="max-w-[480px] mx-auto pb-32">
+    <div v-else-if="plant" class="detail max-w-[480px] mx-auto">
 
-      <!-- 헤더 -->
-      <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between" style="background: var(--bg); border-bottom: 1px solid var(--border);">
-        <NuxtLink to="/plants" class="nav-link text-sm font-medium" style="color: var(--muted);">← 식물 목록</NuxtLink>
-        <NuxtLink to="/cart" class="nav-link text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
+      <!-- 스크롤 시 나타나는 반투명 미니 헤더 -->
+      <div class="minibar" :class="{ show: showMini }">
+        <NuxtLink to="/plants" class="mini-back" aria-label="식물 목록">‹</NuxtLink>
+        <span class="mini-title">{{ plant.name }}</span>
+        <NuxtLink to="/cart" class="mini-cart">장바구니</NuxtLink>
       </div>
 
-      <!-- 이미지 + 오버랩 텍스트 (에디터와 동일 4:5 비율) -->
-      <div class="relative overflow-hidden" style="background: var(--bg-light); aspect-ratio: 4/5; max-height: 672px; width: 100%;">
-        <!-- 이미지 갤러리 -->
+      <!-- 히어로: 풀블리드 이미지 + 그라디언트 스크림 -->
+      <section class="hero">
         <div
           v-if="plant.image_urls.length > 0"
           ref="galleryRef"
-          class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth h-full"
-          style="scrollbar-width: none;"
+          class="gallery"
           @scroll="onGalleryScroll"
         >
-          <div
-            v-for="(url, i) in plant.image_urls"
-            :key="i"
-            class="relative shrink-0 snap-center overflow-hidden"
-            style="width: 100%; height: 100%; flex-shrink: 0;"
-          >
-            <img
-              :src="url"
-              :alt="`${plant.name} ${i + 1}`"
-              :style="heroImageStyle"
-            />
+          <div v-for="(url, i) in plant.image_urls" :key="i" class="slide">
+            <div class="slide-media">
+              <img :src="url" :alt="`${plant.name} ${i + 1}`" :style="heroImageStyle" />
+            </div>
           </div>
         </div>
-        <div v-else class="h-full flex items-center justify-center">
+        <div v-else class="hero-empty">
           <svg class="w-12 h-12" style="color: var(--border);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
 
-        <!-- 텍스트 오버레이 (하단) — height: 38%로 고정, 에디터 프리뷰와 동일 비율 -->
-        <div
-          class="absolute bottom-0 left-0 right-0 px-5 pb-6 flex flex-col justify-end"
-          :style="{ background: `rgba(232, 234, 216, ${plant.overlay_opacity ?? 0.75})`, height: '38%' }"
-        >
-          <!-- 점 인디케이터 -->
-          <div v-if="plant.image_urls.length > 1" class="flex justify-center gap-1.5 mb-4">
+        <div class="hero-scrim"></div>
+
+        <!-- 상단 고스트 버튼 -->
+        <NuxtLink to="/plants" class="ghost-btn ghost-back">‹ 식물 목록</NuxtLink>
+        <NuxtLink to="/cart" class="ghost-btn ghost-cart">장바구니</NuxtLink>
+
+        <!-- 하단 메타 -->
+        <div class="hero-meta">
+          <div v-if="plant.image_urls.length > 1" class="dots">
             <span
               v-for="(_, i) in plant.image_urls"
               :key="i"
-              class="w-1.5 h-1.5 rounded-full transition-colors"
-              :style="i === activeImageIndex ? 'background: var(--dark);' : 'background: rgba(28,26,20,0.3);'"
+              class="dot"
+              :class="{ on: i === activeImageIndex }"
             />
           </div>
 
-          <!-- 카테고리 + 품절 -->
-          <div class="flex items-center gap-2 mb-2">
-            <span v-if="categoryName" class="text-xs font-medium tracking-widest uppercase" style="color: var(--dark); opacity: 0.6;">{{ categoryName }}</span>
-            <span v-if="isOutOfStock" class="text-xs font-medium px-2 py-0.5 rounded" style="background: var(--border); color: var(--muted);">품절</span>
+          <div class="chips r r0">
+            <span v-if="categoryName" class="chip">{{ categoryName }}</span>
+            <span class="chip">
+              <span class="lvl">
+                <b v-for="n in 3" :key="n" :class="{ off: n > careLevelConfig.dots }" />
+              </span>
+              {{ careLevelConfig.label }}
+            </span>
+            <span v-if="isOutOfStock" class="chip chip-sold">품절</span>
           </div>
 
-          <!-- 이름 -->
-          <h1 class="text-2xl font-bold tracking-tight leading-snug mb-2" style="color: var(--dark);">{{ plant.name }}</h1>
+          <h1 class="hero-title r r1">{{ plant.name }}</h1>
+          <p v-if="plant.short_description" class="hero-sub r r2">{{ plant.short_description }}</p>
+        </div>
+      </section>
 
-          <!-- 간단 설명 -->
-          <p v-if="plant.short_description" class="text-sm leading-relaxed mb-4" style="color: var(--dark); opacity: 0.75;">{{ plant.short_description }}</p>
+      <!-- 콘텐츠 시트 (히어로 위로 겹침) -->
+      <section class="sheet">
+        <p v-if="plant.description" class="intro r r3">{{ plant.description }}</p>
 
-          <!-- 관리 난이도 -->
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-medium" style="color: var(--dark); opacity: 0.6;">관리 난이도</span>
-            <div class="flex items-center gap-1.5">
-              <span
-                v-for="n in 3"
-                :key="n"
-                class="w-2.5 h-2.5 rounded-full transition-colors"
-                :style="n <= careLevelConfig.dots
-                  ? `background: ${careLevelConfig.color};`
-                  : 'background: rgba(28,26,20,0.2);'"
-              />
+        <template v-if="careInfoList.length > 0">
+          <div class="group-label r r4">돌봄 가이드</div>
+          <div class="care-list">
+            <div v-for="item in careInfoList" :key="item.key" class="care-row">
+              <span class="care-ic">{{ item.icon }}</span>
+              <div class="care-body">
+                <p class="care-label">{{ item.label }}</p>
+                <p class="care-value">{{ item.content }}</p>
+              </div>
             </div>
-            <span
-              class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
-              :style="`background: ${careLevelConfig.bg}; color: ${careLevelConfig.color};`"
-            >{{ careLevelConfig.label }}</span>
           </div>
-        </div>
-      </div>
+        </template>
 
-      <!-- 소개 -->
-      <div v-if="plant.description" class="reveal px-5 py-5" style="border-top: 1px solid var(--border); animation-delay: 0.02s;">
-        <p class="text-[15px] leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.88;">{{ plant.description }}</p>
-      </div>
-
-      <!-- 항목별 정보 카드 -->
-      <div v-if="careInfoList.length > 0" :style="{ borderTop: plant.description ? 'none' : '1px solid var(--border)' }">
-        <div
-          v-for="(item, i) in careInfoList"
-          :key="item.key"
-          class="reveal px-5 py-4 flex items-start gap-3.5"
-          style="border-bottom: 1px solid var(--border);"
-          :style="{ animationDelay: `${0.08 + i * 0.055}s` }"
-        >
-          <span
-            class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg leading-none"
-            style="background: var(--bg-light);"
-          >{{ item.icon }}</span>
-          <div class="min-w-0 pt-0.5">
-            <p class="text-xs font-semibold tracking-wide mb-1" style="color: var(--muted);">{{ item.label }}</p>
-            <p class="text-[15px] leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.9;">{{ item.content }}</p>
-          </div>
-        </div>
-      </div>
+        <div class="sheet-pad"></div>
+      </section>
     </div>
 
-    <!-- 하단 고정: 가격 + 장바구니 -->
-    <div
-      v-if="plant && !notFound && !isLoading"
-      class="px-5 py-5"
-      style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: var(--bg); border-top: 1px solid var(--border);"
-    >
-      <div class="max-w-[480px] mx-auto flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium tracking-widest uppercase mb-0.5" style="color: var(--muted);">가격</p>
-          <p class="text-xl font-bold" style="color: var(--brand);">{{ formattedPrice }}</p>
+    <!-- 하단 고정 액션바 -->
+    <div v-if="plant && !notFound && !isLoading" class="actionbar">
+      <div class="actionbar-inner max-w-[480px] mx-auto">
+        <div class="price">
+          <span class="price-label">가격</span>
+          <span class="price-value">{{ formattedPrice }}</span>
         </div>
         <button
           @click="handleAddToCart"
@@ -257,55 +257,164 @@ onMounted(load)
 
 <style scoped>
 /*
-  Emil Kowalski / Apple 디자인 원칙 적용:
-  - 강한 커스텀 ease-out (기본 CSS 이징은 약함)
-  - 누르는 즉시 반응하는 피드백 (Apple: respond on press)
-  - 절제된 등장 애니메이션 (첫 진입 시에만, 짧은 stagger)
-  - transform/opacity만 애니메이션 (GPU) + prefers-reduced-motion 존중
+  애플식 상세 페이지 (emil-design-eng + apple-design 적용)
+  - 풀블리드 히어로 + 그라디언트 스크림 + 겹치는 라운드 시트(깊이)
+  - iOS 그룹 인셋 리스트, 반투명 블러 미니헤더/액션바
+  - 강한 커스텀 이징, 누름 즉시 반응, 로드/스크롤 리빌, reduced-motion 존중
+  - 브랜드 팔레트(var(--brand) 등) 유지, 라이트 단일 테마(앱 전체 일관)
 */
 
-/* 콘텐츠 등장: 아래에서 살짝 올라오며 페이드인 */
-.reveal {
-  animation: reveal 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+.detail { position: relative; padding-bottom: 0; }
+
+/* ── 스크롤 시 나타나는 미니 헤더 ── */
+.minibar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  max-width: 480px; margin: 0 auto;
+  height: 52px; display: flex; align-items: center; gap: 8px;
+  padding: 0 12px 0 8px;
+  background: rgba(240, 241, 232, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+  opacity: 0; transform: translateY(-6px); pointer-events: none;
+  transition: opacity .28s ease, transform .28s cubic-bezier(0.23, 1, 0.32, 1);
 }
-@keyframes reveal {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.minibar.show { opacity: 1; transform: none; pointer-events: auto; }
+.mini-back { font-size: 22px; line-height: 1; color: var(--dark); padding: 4px 10px; }
+.mini-title { flex: 1; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-cart { font-size: 14px; font-weight: 500; color: var(--muted); padding: 4px 6px; }
+
+/* ── 히어로 ── */
+.hero {
+  position: relative; width: 100%;
+  aspect-ratio: 4 / 5; max-height: 640px;
+  overflow: hidden; background: var(--bg-light);
+}
+.gallery {
+  display: flex; height: 100%;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+.gallery::-webkit-scrollbar { display: none; }
+.slide { position: relative; flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: center; overflow: hidden; }
+.slide-media { position: absolute; inset: 0; animation: heroIn 1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes heroIn { from { transform: scale(1.05); } to { transform: scale(1); } }
+.hero-empty { height: 100%; display: flex; align-items: center; justify-content: center; }
+
+.hero-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top,
+    rgba(16, 20, 10, 0.66) 0%, rgba(16, 20, 10, 0.32) 24%, rgba(16, 20, 10, 0) 50%);
 }
 
-/* 장바구니 담기 — 브랜드색 알약 버튼, 누르면 반응 */
+.ghost-btn {
+  position: absolute; top: 14px; z-index: 5;
+  display: inline-flex; align-items: center; height: 34px; padding: 0 14px;
+  border-radius: 999px; color: #fff; font-size: 14px; font-weight: 500;
+  background: rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  transition: transform .14s cubic-bezier(0.23, 1, 0.32, 1), background .14s ease;
+}
+.ghost-back { left: 12px; padding-left: 10px; }
+.ghost-cart { right: 12px; }
+.ghost-btn:active { transform: scale(0.94); }
+
+.hero-meta { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 0 22px 22px; color: #fff; }
+.dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.45); transition: background .2s ease; }
+.dot.on { background: #fff; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 11px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: #fff;
+}
+.chip-sold { background: rgba(0,0,0,0.4); }
+.lvl { display: inline-flex; gap: 3px; align-items: center; }
+.lvl b { width: 5px; height: 5px; border-radius: 50%; background: #fff; }
+.lvl b.off { background: rgba(255, 255, 255, 0.4); }
+
+.hero-title {
+  margin: 0; font-size: 31px; line-height: 1.08; font-weight: 700;
+  letter-spacing: -0.025em; text-wrap: balance;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.28);
+}
+.hero-sub { margin: 8px 0 0; font-size: 15px; line-height: 1.45; color: rgba(255, 255, 255, 0.88); max-width: 30ch; }
+
+/* ── 콘텐츠 시트 (히어로 위로 겹침) ── */
+.sheet {
+  position: relative; z-index: 6; margin-top: -18px;
+  background: var(--bg); border-radius: 22px 22px 0 0;
+  box-shadow: 0 -1px 40px rgba(20, 30, 12, 0.10);
+  padding: 26px 22px 0;
+}
+.intro { margin: 6px 0 26px; font-size: 16px; line-height: 1.62; color: var(--dark); opacity: 0.9; letter-spacing: -0.003em; white-space: pre-line; }
+.group-label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0 4px 10px; }
+
+.care-list { background: var(--bg-light); border-radius: 18px; overflow: hidden; }
+.care-row { display: flex; gap: 14px; align-items: flex-start; padding: 15px 16px; position: relative; }
+.care-row + .care-row::before { content: ""; position: absolute; top: 0; left: 62px; right: 0; height: 1px; background: var(--border); }
+.care-ic {
+  flex: none; width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; line-height: 1; background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.care-body { min-width: 0; padding-top: 1px; }
+.care-label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; color: var(--muted); margin: 0 0 3px; }
+.care-value { font-size: 15px; line-height: 1.5; margin: 0; color: var(--dark); opacity: 0.92; letter-spacing: -0.003em; white-space: pre-line; }
+
+.sheet-pad { height: 120px; }
+
+/* ── 하단 고정 액션바 ── */
+.actionbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  background: rgba(240, 241, 232, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  border-top: 1px solid var(--border);
+}
+.actionbar-inner {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+}
+.price { display: flex; flex-direction: column; line-height: 1; }
+.price-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.price-value { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--dark); font-variant-numeric: tabular-nums; }
 .cta {
-  background: var(--brand);
-  color: #fff;
-  padding: 0.7rem 1.5rem;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), opacity 140ms ease, filter 140ms ease;
+  flex: 1; height: 52px; border-radius: 16px;
+  background: var(--brand); color: #fff;
+  font-size: 16.5px; font-weight: 650; letter-spacing: -0.01em;
+  transition: transform .16s cubic-bezier(0.34, 1.4, 0.5, 1), filter .16s ease, opacity .16s ease;
 }
-.cta:active { transform: scale(0.96); }
-.cta:disabled { opacity: 0.45; background: var(--muted); }
+.cta:active { transform: scale(0.965); }
+.cta:disabled { opacity: 0.5; background: var(--muted); }
 
-/* 헤더 링크 — 누르면 살짝 반응 */
-.nav-link {
-  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), opacity 140ms ease;
-}
-.nav-link:active { transform: scale(0.94); opacity: 0.7; }
+/* ── 등장 애니메이션 ── */
+.r { opacity: 0; transform: translateY(12px); animation: rise .6s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.r0 { animation-delay: .10s; } .r1 { animation-delay: .17s; } .r2 { animation-delay: .24s; }
+.r3 { animation-delay: .31s; } .r4 { animation-delay: .38s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
 
-/* hover는 마우스 환경에서만 (터치 오탐 방지) */
+.care-row { opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s cubic-bezier(0.23, 1, 0.32, 1); }
+.care-row.in { opacity: 1; transform: none; }
+
+/* hover는 마우스 환경에서만 */
 @media (hover: hover) and (pointer: fine) {
-  .cta:not(:disabled):hover { filter: brightness(1.08); }
-  .nav-link:hover { opacity: 0.7; }
+  .cta:not(:disabled):hover { filter: brightness(1.07); }
+  .ghost-btn:hover { background: rgba(255, 255, 255, 0.26); }
+  .mini-cart:hover { color: var(--dark); }
 }
 
-/* 접근성: 움직임 최소화 선호 시 이동 제거, 페이드만 */
+/* 접근성: 움직임 최소화 */
 @media (prefers-reduced-motion: reduce) {
-  .reveal { animation: revealFade 0.3s ease both; }
-  .cta:active, .nav-link:active { transform: none; }
+  .slide-media { animation: none; }
+  .r { animation: fade .3s ease both; transform: none; }
+  .care-row { transition: opacity .3s ease; transform: none; }
+  .cta:active, .ghost-btn:active { transform: none; }
 }
-@keyframes revealFade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 </style>
