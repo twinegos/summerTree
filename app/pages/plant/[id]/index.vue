@@ -111,12 +111,6 @@ async function handleAddToCart() {
   else showSuccess('장바구니에 담겼습니다')
 }
 
-// 스크롤 시 나타나는 반투명 미니 헤더
-const showMini = ref(false)
-function onScroll() {
-  showMini.value = window.scrollY > window.innerHeight * 0.42
-}
-
 // 돌봄 가이드 항목 스크롤 리빌
 let io: IntersectionObserver | null = null
 function setupReveal() {
@@ -135,13 +129,11 @@ function setupReveal() {
 }
 
 onMounted(async () => {
-  window.addEventListener('scroll', onScroll, { passive: true })
   await load()
   await nextTick()
   setupReveal()
 })
 onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll)
   io?.disconnect()
 })
 </script>
@@ -164,13 +156,6 @@ onUnmounted(() => {
 
     <!-- 상품 상세 -->
     <div v-else-if="plant" class="detail max-w-[480px] mx-auto">
-
-      <!-- 스크롤 시 나타나는 반투명 미니 헤더 -->
-      <div class="minibar" :class="{ show: showMini }">
-        <NuxtLink to="/plants" class="mini-back" aria-label="식물 목록">‹</NuxtLink>
-        <span class="mini-title">{{ plant.name }}</span>
-        <NuxtLink to="/cart" class="mini-cart">장바구니</NuxtLink>
-      </div>
 
       <!-- 히어로: 풀블리드 이미지 + 그라디언트 스크림 -->
       <section class="hero">
@@ -276,24 +261,6 @@ onUnmounted(() => {
 */
 
 .detail { position: relative; padding-bottom: 0; }
-
-/* ── 스크롤 시 나타나는 미니 헤더 ── */
-.minibar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-  max-width: 480px; margin: 0 auto;
-  height: 52px; display: flex; align-items: center; gap: 8px;
-  padding: 0 12px 0 8px;
-  background: rgba(240, 241, 232, 0.72);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--border);
-  opacity: 0; transform: translateY(-6px); pointer-events: none;
-  transition: opacity .28s ease, transform .28s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.minibar.show { opacity: 1; transform: none; pointer-events: auto; }
-.mini-back { font-size: 22px; line-height: 1; color: var(--dark); padding: 4px 10px; }
-.mini-title { flex: 1; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-cart { font-size: 14px; font-weight: 500; color: var(--muted); padding: 4px 6px; }
 
 /* ── 히어로 ── */
 .hero {
@@ -418,7 +385,6 @@ onUnmounted(() => {
 @media (hover: hover) and (pointer: fine) {
   .cta:not(:disabled):hover { filter: brightness(1.07); }
   .ghost-btn:hover { background: rgba(255, 255, 255, 0.26); }
-  .mini-cart:hover { color: var(--dark); }
 }
 
 /* 접근성: 움직임 최소화 */
