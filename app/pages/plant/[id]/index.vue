@@ -286,8 +286,8 @@ onUnmounted(() => {
 }
 
 .ghost-btn {
-  position: absolute; top: 14px; z-index: 5;
-  display: inline-flex; align-items: center; height: 34px; padding: 0 14px;
+  position: absolute; top: 12px; z-index: 5;
+  display: inline-flex; align-items: center; height: 44px; padding: 0 16px;
   border-radius: 999px; color: #fff; font-size: 14px; font-weight: 500;
   background: rgba(255, 255, 255, 0.16);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
@@ -380,6 +380,16 @@ onUnmounted(() => {
 
 .care-row { opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s cubic-bezier(0.23, 1, 0.32, 1); }
 .care-row.in { opacity: 1; transform: none; }
+
+/* 키보드 포커스 표시 (a11y) — 마우스 클릭엔 안 뜨고 키보드 이동 시에만 */
+.cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand);
+}
+.ghost-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
 
 /* hover는 마우스 환경에서만 */
 @media (hover: hover) and (pointer: fine) {
