@@ -57,6 +57,7 @@ export type Database = {
           image_scale: number
           overlay_opacity: number
           care_info: Record<string, string>
+          extra_info: Record<string, string>
           price: number
           stock: number
           image_urls: string[]
@@ -80,6 +81,7 @@ export type Database = {
           image_scale?: number
           overlay_opacity?: number
           care_info?: Record<string, string>
+          extra_info?: Record<string, string>
           price: number
           stock?: number
           image_urls?: string[]
@@ -102,6 +104,7 @@ export type Database = {
           image_scale?: number
           overlay_opacity?: number
           care_info?: Record<string, string>
+          extra_info?: Record<string, string>
           price?: number
           stock?: number
           image_urls?: string[]

@@ -68,6 +68,9 @@ const careLevelConfig = computed(() => {
   return { label: '보통', color: '#6B5B1A', bg: '#F5EDCC', dots: 2 }
 })
 
+// 학명/영문명/원산지/꽃말 등 부가 정보
+const extra = computed<Record<string, string>>(() => plant.value?.extra_info ?? {})
+
 // 항목별 정보 (값이 있는 항목만, CARE_ITEMS 순서대로)
 const careInfoList = computed(() => {
   const info = plant.value?.care_info ?? {}
@@ -213,10 +216,25 @@ onUnmounted(() => {
 
       <!-- 콘텐츠 시트 (히어로 위로 겹침) -->
       <section class="sheet">
-        <p v-if="plant.description" class="intro r r3">{{ plant.description }}</p>
+        <!-- 정체성: 학명 + 한글·영문명 + 꽃말 -->
+        <div v-if="extra.scientific_name || extra.english_name || extra.flower_meaning" class="ident r r3">
+          <p v-if="extra.scientific_name" class="sci">{{ extra.scientific_name }}</p>
+          <p class="names">
+            <span class="kr">{{ plant.name }}</span><span v-if="extra.english_name" class="en"> · {{ extra.english_name }}</span>
+          </p>
+          <p v-if="extra.flower_meaning" class="meaning"><span class="m-label">꽃말</span>{{ extra.flower_meaning }}</p>
+        </div>
+
+        <!-- 원산지 · 자생 환경 -->
+        <div v-if="extra.origin" class="origin r r4">
+          <p class="mini-label">원산지 · 자생 환경</p>
+          <p class="origin-text">{{ extra.origin }}</p>
+        </div>
+
+        <p v-if="plant.description" class="intro r r5">{{ plant.description }}</p>
 
         <template v-if="careInfoList.length > 0">
-          <div class="group-label r r4">돌봄 가이드</div>
+          <div class="group-label r r5">돌봄 가이드</div>
           <div class="care-list">
             <div v-for="item in careInfoList" :key="item.key" class="care-row">
               <span class="care-ic" v-html="careIcons[item.key]"></span>
@@ -329,6 +347,20 @@ onUnmounted(() => {
   box-shadow: 0 -1px 40px rgba(20, 30, 12, 0.10);
   padding: 26px 22px 0;
 }
+/* 정체성 (학명/한글·영문명/꽃말) */
+.ident { padding: 2px 2px 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.sci { margin: 0 0 6px; font-size: 15px; font-style: italic; font-weight: 500; letter-spacing: 0.01em; color: var(--brand); }
+.names { margin: 0; font-size: 16px; line-height: 1.3; }
+.names .kr { font-weight: 700; letter-spacing: -0.01em; color: var(--dark); }
+.names .en { font-weight: 500; color: var(--muted); }
+.meaning { margin: 12px 0 0; font-size: 14px; color: var(--dark); opacity: 0.9; }
+.meaning .m-label { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); background: var(--bg-light); padding: 3px 8px; border-radius: 999px; margin-right: 9px; vertical-align: middle; }
+
+/* 원산지 · 자생 환경 */
+.origin { margin-bottom: 22px; }
+.mini-label { margin: 0 0 8px 2px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); }
+.origin-text { margin: 0; font-size: 15px; line-height: 1.6; color: var(--dark); opacity: 0.9; white-space: pre-line; }
+
 .intro { margin: 6px 0 26px; font-size: 16px; line-height: 1.62; color: var(--dark); opacity: 0.9; letter-spacing: -0.003em; white-space: pre-line; }
 .group-label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0 4px 10px; }
 
@@ -374,6 +406,7 @@ onUnmounted(() => {
 
 /* ── 등장 애니메이션 ── */
 .r { opacity: 0; transform: translateY(12px); animation: rise .6s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.r5 { animation-delay: .45s; }
 .r0 { animation-delay: .10s; } .r1 { animation-delay: .17s; } .r2 { animation-delay: .24s; }
 .r3 { animation-delay: .31s; } .r4 { animation-delay: .38s; }
 @keyframes rise { to { opacity: 1; transform: none; } }
