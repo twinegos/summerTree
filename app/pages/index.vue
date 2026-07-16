@@ -127,7 +127,8 @@ onUnmounted(() => { io?.disconnect() })
 }
 .hdr-cart {
   font-size: 14px; font-weight: 500; color: var(--muted);
-  padding: 8px 10px; border-radius: 10px;
+  min-height: 44px; display: inline-flex; align-items: center;
+  padding: 0 10px; border-radius: 10px;
   transition: transform .14s cubic-bezier(0.23,1,0.32,1), color .14s ease;
 }
 .hdr-cart:active { transform: scale(0.94); }

@@ -136,7 +136,7 @@ onMounted(async () => {
 
 .lst-hdr { flex: none; padding: 14px 20px 10px; }
 .lst-hdr-in { max-width: 480px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-.hdr-cart { font-size: 14px; font-weight: 500; color: var(--muted); padding: 8px 10px; border-radius: 10px; transition: transform .14s cubic-bezier(0.23,1,0.32,1), color .14s ease; }
+.hdr-cart { font-size: 14px; font-weight: 500; color: var(--muted); min-height: 44px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 10px; transition: transform .14s cubic-bezier(0.23,1,0.32,1), color .14s ease; }
 .hdr-cart:active { transform: scale(0.94); }
 .cart-badge { margin-left: 5px; font-weight: 700; color: #fff; background: var(--brand); font-size: 11px; padding: 1px 7px; border-radius: 999px; }
 
@@ -144,7 +144,7 @@ onMounted(async () => {
 .search { position: relative; margin-bottom: 12px; }
 .search-ic { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--muted); pointer-events: none; }
 .search input {
-  width: 100%; height: 40px; padding: 0 14px 0 38px;
+  width: 100%; height: 44px; padding: 0 14px 0 38px;
   background: var(--bg-light); border: 1px solid var(--border); border-radius: 12px;
   font-size: 15px; color: var(--dark); font-family: inherit;
   transition: border-color .15s ease, box-shadow .15s ease;

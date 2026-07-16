@@ -107,7 +107,7 @@ onMounted(fetchCart)
   -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border);
 }
-.nav-back { font-size: 15px; color: var(--muted); padding: 6px 8px; border-radius: 8px; }
+.nav-back { font-size: 15px; color: var(--muted); min-height: 44px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 8px; }
 .nav-back:active { opacity: 0.6; }
 .nav-title { flex: 1; text-align: center; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: var(--dark); }
 .nav-spacer { width: 84px; }

@@ -34,3 +34,4 @@ logs
 .devtmp
 .buildtmp
 .devtmp2
+.adt
