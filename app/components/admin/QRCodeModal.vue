@@ -91,12 +91,12 @@ watch(
               <span class="text-sm text-gray-400">생성 중...</span>
             </div>
 
-            <!-- QR 이미지 -->
+            <!-- QR 이미지 (비율 유지) -->
             <img
               v-else-if="qrDataUrl"
               :src="qrDataUrl"
               :alt="`${plant.name} QR 코드`"
-              class="w-[250px] h-[250px] rounded-xl border border-gray-100"
+              class="w-[250px] h-auto rounded-xl"
             />
 
             <!-- 식물 이름 -->
