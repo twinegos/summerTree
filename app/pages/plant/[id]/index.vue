@@ -76,6 +76,17 @@ const careInfoList = computed(() => {
     .map((item) => ({ ...item, content: info[item.key] }))
 })
 
+// SF Symbols 스타일의 깔끔한 라인 아이콘 (이모지 대체, 단색 stroke)
+const SVG = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"'
+const careIcons: Record<string, string> = {
+  sunlight: `<svg ${SVG}><circle cx="12" cy="12" r="3.6"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>`,
+  water: `<svg ${SVG}><path d="M12 3.3c2.7 3 4.7 5.6 4.7 8.5a4.7 4.7 0 1 1-9.4 0C7.3 8.9 9.3 6.3 12 3.3z"/></svg>`,
+  temperature: `<svg ${SVG}><path d="M14 14.9V5.4a2 2 0 1 0-4 0v9.5a4 4 0 1 0 4 0z"/><circle cx="12" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg>`,
+  humidity: `<svg ${SVG}><path d="M3.5 8.8c1.9 1.7 3.8 1.7 5.7 0s3.8-1.7 5.7 0 3.8 1.7 5.6 0M3.5 14.8c1.9 1.7 3.8 1.7 5.7 0s3.8-1.7 5.7 0 3.8 1.7 5.6 0"/></svg>`,
+  soil: `<svg ${SVG}><path d="M12 21v-8.5"/><path d="M12 13c0-3.4-2.3-5.6-5.7-5.6C6.3 10.8 8.6 13 12 13z"/><path d="M12 11c0-3.1 2.1-5.2 5.3-5.2C17.3 8.9 15.2 11 12 11z"/></svg>`,
+  caution: `<svg ${SVG}><path d="M12 3.9 21.4 20H2.6L12 3.9z"/><path d="M12 10v4.3"/><circle cx="12" cy="17.4" r="0.9" fill="currentColor" stroke="none"/></svg>`,
+}
+
 async function load() {
   isLoading.value = true
   const { data, error } = await fetchPlantById(route.params.id as string)
@@ -223,7 +234,7 @@ onUnmounted(() => {
           <div class="group-label r r4">돌봄 가이드</div>
           <div class="care-list">
             <div v-for="item in careInfoList" :key="item.key" class="care-row">
-              <span class="care-ic">{{ item.icon }}</span>
+              <span class="care-ic" v-html="careIcons[item.key]"></span>
               <div class="care-body">
                 <p class="care-label">{{ item.label }}</p>
                 <p class="care-value">{{ item.content }}</p>
@@ -360,9 +371,10 @@ onUnmounted(() => {
 .care-ic {
   flex: none; width: 34px; height: 34px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; line-height: 1; background: var(--bg);
+  background: var(--bg); color: var(--brand);
   box-shadow: inset 0 0 0 1px var(--border);
 }
+.care-ic :deep(svg) { width: 20px; height: 20px; display: block; }
 .care-body { min-width: 0; padding-top: 1px; }
 .care-label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; color: var(--muted); margin: 0 0 3px; }
 .care-value { font-size: 15px; line-height: 1.5; margin: 0; color: var(--dark); opacity: 0.92; letter-spacing: -0.003em; white-space: pre-line; }
