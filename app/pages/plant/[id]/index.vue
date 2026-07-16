@@ -124,8 +124,8 @@ onMounted(load)
 
       <!-- 헤더 -->
       <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between" style="background: var(--bg); border-bottom: 1px solid var(--border);">
-        <NuxtLink to="/plants" class="text-sm font-medium" style="color: var(--muted);">← 식물 목록</NuxtLink>
-        <NuxtLink to="/cart" class="text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
+        <NuxtLink to="/plants" class="nav-link text-sm font-medium" style="color: var(--muted);">← 식물 목록</NuxtLink>
+        <NuxtLink to="/cart" class="nav-link text-sm font-medium" style="color: var(--muted);">장바구니</NuxtLink>
       </div>
 
       <!-- 이미지 + 오버랩 텍스트 (에디터와 동일 4:5 비율) -->
@@ -207,22 +207,26 @@ onMounted(load)
       </div>
 
       <!-- 소개 -->
-      <div v-if="plant.description" class="px-5 py-5" style="border-top: 1px solid var(--border);">
-        <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.85;">{{ plant.description }}</p>
+      <div v-if="plant.description" class="reveal px-5 py-5" style="border-top: 1px solid var(--border); animation-delay: 0.02s;">
+        <p class="text-[15px] leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.88;">{{ plant.description }}</p>
       </div>
 
       <!-- 항목별 정보 카드 -->
       <div v-if="careInfoList.length > 0" :style="{ borderTop: plant.description ? 'none' : '1px solid var(--border)' }">
         <div
-          v-for="item in careInfoList"
+          v-for="(item, i) in careInfoList"
           :key="item.key"
-          class="px-5 py-4 flex items-start gap-3"
+          class="reveal px-5 py-4 flex items-start gap-3.5"
           style="border-bottom: 1px solid var(--border);"
+          :style="{ animationDelay: `${0.08 + i * 0.055}s` }"
         >
-          <span class="text-xl shrink-0 leading-none mt-0.5">{{ item.icon }}</span>
-          <div class="min-w-0">
-            <p class="text-sm font-semibold mb-1" style="color: var(--dark);">{{ item.label }}</p>
-            <p class="text-sm leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.8;">{{ item.content }}</p>
+          <span
+            class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg leading-none"
+            style="background: var(--bg-light);"
+          >{{ item.icon }}</span>
+          <div class="min-w-0 pt-0.5">
+            <p class="text-xs font-semibold tracking-wide mb-1" style="color: var(--muted);">{{ item.label }}</p>
+            <p class="text-[15px] leading-relaxed whitespace-pre-line" style="color: var(--dark); opacity: 0.9;">{{ item.content }}</p>
           </div>
         </div>
       </div>
@@ -242,12 +246,66 @@ onMounted(load)
         <button
           @click="handleAddToCart"
           :disabled="isOutOfStock || isAddingToCart"
-          class="text-link text-base disabled:opacity-40"
-          :style="isOutOfStock ? 'color: var(--muted);' : ''"
+          class="cta"
         >
-          {{ isOutOfStock ? '품절' : isAddingToCart ? '담는 중...' : '장바구니 담기 →' }}
+          {{ isOutOfStock ? '품절' : isAddingToCart ? '담는 중...' : '장바구니 담기' }}
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/*
+  Emil Kowalski / Apple 디자인 원칙 적용:
+  - 강한 커스텀 ease-out (기본 CSS 이징은 약함)
+  - 누르는 즉시 반응하는 피드백 (Apple: respond on press)
+  - 절제된 등장 애니메이션 (첫 진입 시에만, 짧은 stagger)
+  - transform/opacity만 애니메이션 (GPU) + prefers-reduced-motion 존중
+*/
+
+/* 콘텐츠 등장: 아래에서 살짝 올라오며 페이드인 */
+.reveal {
+  animation: reveal 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 장바구니 담기 — 브랜드색 알약 버튼, 누르면 반응 */
+.cta {
+  background: var(--brand);
+  color: #fff;
+  padding: 0.7rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), opacity 140ms ease, filter 140ms ease;
+}
+.cta:active { transform: scale(0.96); }
+.cta:disabled { opacity: 0.45; background: var(--muted); }
+
+/* 헤더 링크 — 누르면 살짝 반응 */
+.nav-link {
+  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), opacity 140ms ease;
+}
+.nav-link:active { transform: scale(0.94); opacity: 0.7; }
+
+/* hover는 마우스 환경에서만 (터치 오탐 방지) */
+@media (hover: hover) and (pointer: fine) {
+  .cta:not(:disabled):hover { filter: brightness(1.08); }
+  .nav-link:hover { opacity: 0.7; }
+}
+
+/* 접근성: 움직임 최소화 선호 시 이동 제거, 페이드만 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: revealFade 0.3s ease both; }
+  .cta:active, .nav-link:active { transform: none; }
+}
+@keyframes revealFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>
